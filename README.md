@@ -72,6 +72,8 @@ shirtso-frontend/
 │   ├── App.jsx                # Main component with routing
 │   └── index.jsx              # Entry point
 └── package.json
+
+
 API Integration
 The frontend is designed to work with the Shirtso backend API. The API endpoints are:
 
