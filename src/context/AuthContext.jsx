@@ -1,6 +1,6 @@
 import {createContext, useEffect, useState} from "react";
 import {authService} from "../api/auth";
-import jwt_decode from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 
 export const AuthContext = createContext();
 
@@ -11,10 +11,10 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkLoggedIn = async () => {
-            const token = localStorage.getItem('auth_token');
+            const token = localStorage.getItem('auth-token');
             if (token) {
                 try {
-                    const decoded = jwt_decode(token);
+                    const decoded = jwtDecode(token);
                     const currentTime = Date.now() / 1000;
                     if (decoded.exp < currentTime) {
                         authService.logout();
@@ -32,7 +32,11 @@ export const AuthProvider = ({ children }) => {
             }
             setLoading(false);
         };
-        checkLoggedIn();
+
+        checkLoggedIn().catch(error => {
+            console.error("Error checking authentication:", error);
+            setLoading(false);
+        });
     }, []);
 
     const login = async (credentials) => {
@@ -42,7 +46,7 @@ export const AuthProvider = ({ children }) => {
             const data = await authService.login(credentials);
 
             if (data.token) {
-                const decoded = jwt_decode(data.token);
+                const decoded = jwtDecode(data.token);
                 setCurrentUser({
                     username: decoded.sub,
                     roles: decoded.roles || []
