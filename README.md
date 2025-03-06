@@ -43,7 +43,10 @@ npm start
 
 The application will open in your browser at http://localhost:3000
 
-Project Structure
+## Project Structure
+
+```bash
+
 shirtso-frontend/
 ├── public/
 │   ├── index.html
@@ -72,6 +75,7 @@ shirtso-frontend/
 │   ├── App.jsx                # Main component with routing
 │   └── index.jsx              # Entry point
 └── package.json
+```
 
 
 API Integration
