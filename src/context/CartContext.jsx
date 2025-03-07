@@ -49,9 +49,9 @@ export const CartProvider = ({ children }) => {
     };
 
     const  removeFromCart = (productId, size) => {
-        setCartItems(prevItems => {
-            prevItems.filter(item => !(item.productId === productId && item.size === size));
-        });
+        setCartItems(prevItems =>
+            prevItems.filter(item => !(item.productId === productId && item.size === size))
+        );
     };
 
     const updateQuantity = (productId, size, quantity) => {
