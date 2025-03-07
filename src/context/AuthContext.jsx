@@ -1,6 +1,7 @@
 import {createContext, useEffect, useState} from "react";
 import {authService} from "../api/auth";
 import {jwtDecode} from 'jwt-decode';
+import API_CONFIG from "../config/api.config";
 
 export const AuthContext = createContext();
 
@@ -11,7 +12,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkLoggedIn = async () => {
-            const token = localStorage.getItem('auth-token');
+            const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
             if (token) {
                 try {
                     const decoded = jwtDecode(token);

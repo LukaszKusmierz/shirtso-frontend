@@ -46,8 +46,8 @@ axiosInstance.interceptors.response.use(
                 case 401: // Unauthorized
                     localStorage.removeItem(API_CONFIG.TOKEN_KEY);
                     // Only redirect if not already on the login page
-                    if (!window.location.pathname.includes('/login')) {
-                        window.location.href = '/login';
+                    if (!window.location.pathname.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN)) {
+                        window.location.href = API_CONFIG.ENDPOINTS.AUTH.LOGIN;
                     }
                     console.error("Authentication error:", data);
                     break;
