@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import MainLayout from './components/layout/MainLayout';
+import MainLayout from './components/common/MainLayout';
 
 // Pages
 import HomePage from './pages/HomePage';

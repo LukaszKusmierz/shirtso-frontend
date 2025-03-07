@@ -1,6 +1,16 @@
 import React from 'react';
+import { getAllSizes } from '../../utils/sizes';
 
-const SizeSelector = ({ value, onChange, sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] }) => {
+/**
+ * Size selector component for product sizing
+ *
+ * @param {Object} props - Component props
+ * @param {string} props.value - Currently selected size
+ * @param {Function} props.onChange - Handler called when size selection changes
+ * @param {Array<string>} [props.sizes] - Optional custom sizes to display (defaults to all available sizes)
+ * @returns {JSX.Element} Size selector component
+ */
+const SizeSelector = ({ value, onChange, sizes = getAllSizes() }) => {
     return (
         <div className="flex flex-wrap gap-2">
             {sizes.map(size => (

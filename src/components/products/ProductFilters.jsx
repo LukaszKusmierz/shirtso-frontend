@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { categoryService } from '../../api/categories';
+import { getAllSizes } from '../../utils/sizes';
 
+/**
+ * Product filters component for filtering products by various criteria
+ */
 const ProductFilters = ({
                             onFilterChange,
                             selectedCategoryId,
@@ -11,7 +15,18 @@ const ProductFilters = ({
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
-    const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+    const [loading, setLoading] = useState({
+        categories: false,
+        subcategories: false
+    });
+    const [error, setError] = useState({
+        categories: null,
+        subcategories: null
+    });
+
+    // Get all available sizes
+    const sizes = getAllSizes();
+
     const stockOptions = [
         { id: 'all', name: 'All Products' },
         { id: 'in-stock', name: 'In Stock' },
@@ -19,35 +34,62 @@ const ProductFilters = ({
         { id: 'top-up-stock', name: 'Low Stock (< 3)' }
     ];
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await categoryService.getCategoriesWithSubcategories();
-                setCategories(response.data);
-            } catch (error) {
-                console.error('Failed to fetch categories', error);
-            }
-        };
+    // Fetch categories - using useCallback to avoid recreation on each render
+    const fetchCategories = useCallback(async () => {
+        setLoading(prev => ({ ...prev, categories: true }));
+        setError(prev => ({ ...prev, categories: null }));
 
-        fetchCategories();
+        try {
+            const response = await categoryService.getCategoriesWithSubcategories();
+            setCategories(response.data || []);
+        } catch (error) {
+            console.error('Failed to fetch categories', error);
+            setError(prev => ({
+                ...prev,
+                categories: 'Failed to load categories. Please try again.'
+            }));
+        } finally {
+            setLoading(prev => ({ ...prev, categories: false }));
+        }
     }, []);
 
-    useEffect(() => {
-        const fetchSubcategories = async () => {
-            if (selectedCategoryId) {
-                try {
-                    const response = await categoryService.getSubcategoriesByCategory(selectedCategoryId);
-                    setSubcategories(response.data);
-                } catch (error) {
-                    console.error('Failed to fetch subcategories', error);
-                }
-            } else {
-                setSubcategories([]);
-            }
-        };
+    // Fetch subcategories for a specific category - using useCallback
+    const fetchSubcategories = useCallback(async (categoryId) => {
+        if (!categoryId) {
+            setSubcategories([]);
+            return;
+        }
 
-        fetchSubcategories();
-    }, [selectedCategoryId]);
+        setLoading(prev => ({ ...prev, subcategories: true }));
+        setError(prev => ({ ...prev, subcategories: null }));
+
+        try {
+            const response = await categoryService.getSubcategoriesByCategory(categoryId);
+            setSubcategories(response.data || []);
+        } catch (error) {
+            console.error('Failed to fetch subcategories', error);
+            setError(prev => ({
+                ...prev,
+                subcategories: 'Failed to load subcategories. Please try again.'
+            }));
+        } finally {
+            setLoading(prev => ({ ...prev, subcategories: false }));
+        }
+    }, []);
+
+    // Load categories on component mount
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
+
+    // Load subcategories when selected category changes
+    useEffect(() => {
+        if (selectedCategoryId) {
+            fetchSubcategories(selectedCategoryId);
+        } else {
+            setSubcategories([]);
+        }
+    }, [selectedCategoryId, fetchSubcategories]);
 
     const handleCategoryChange = (e) => {
         const categoryId = e.target.value ? parseInt(e.target.value) : null;
@@ -88,6 +130,7 @@ const ProductFilters = ({
                     name="category"
                     value={selectedCategoryId || ''}
                     onChange={handleCategoryChange}
+                    disabled={loading.categories}
                     className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                     <option value="">All Categories</option>
@@ -97,10 +140,13 @@ const ProductFilters = ({
                         </option>
                     ))}
                 </select>
+                {error.categories && (
+                    <p className="mt-1 text-sm text-red-600">{error.categories}</p>
+                )}
             </div>
 
             {/* Subcategory Filter - Only show if a category is selected */}
-            {selectedCategoryId && subcategories.length > 0 && (
+            {selectedCategoryId && (
                 <div>
                     <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-2">
                         Subcategory
@@ -110,6 +156,7 @@ const ProductFilters = ({
                         name="subcategory"
                         value={selectedSubcategoryId || ''}
                         onChange={handleSubcategoryChange}
+                        disabled={loading.subcategories}
                         className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     >
                         <option value="">All Subcategories</option>
@@ -119,6 +166,9 @@ const ProductFilters = ({
                             </option>
                         ))}
                     </select>
+                    {error.subcategories && (
+                        <p className="mt-1 text-sm text-red-600">{error.subcategories}</p>
+                    )}
                 </div>
             )}
 
