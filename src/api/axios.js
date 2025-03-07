@@ -1,5 +1,6 @@
 import axios from "axios";
 import API_CONFIG from "../config/api.config";
+import ApiDebugger from "../utils/apiDebugger";
 
 /**
  * Axios instance with default configuration
@@ -9,6 +10,7 @@ const axiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json'
     },
+    withCredentials: true
 });
 
 /**
@@ -85,5 +87,10 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+(async () => {
+    const isConnected = await ApiDebugger.testConnection(API_CONFIG.BASE_URL);
+    console.log(`Backend connection status: ${isConnected ? '✅ Connected' : '❌ Disconnected'}`);
+})();
 
 export default axiosInstance;
