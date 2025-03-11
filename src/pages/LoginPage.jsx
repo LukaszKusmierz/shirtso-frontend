@@ -1,14 +1,14 @@
 import React from 'react';
-import RegisterForm from '../components/auth/RegisterForm';
+import LoginForm from "../components/auth/LoginForm";
 
-const RegisterPage = () => {
+const LoginPage = () => {
     return (
         <div className="container mx-auto p-4">
             <div className="max-w-md mx-auto">
-                <RegisterForm />
+                <LoginForm />
             </div>
         </div>
     );
 };
 
-export default RegisterPage;
+export default LoginPage;
