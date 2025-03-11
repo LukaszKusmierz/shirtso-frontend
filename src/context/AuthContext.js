@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
             } catch (err) {
                 console.error('Authentication initialization error:', err);
                 localStorage.removeItem('token');
+                setCurrentUser(null);
             } finally {
                 setLoading(false);
             }
