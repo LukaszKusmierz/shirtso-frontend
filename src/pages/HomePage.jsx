@@ -46,6 +46,12 @@ const HomePage = () => {
 
     return (
         <div className="container mx-auto p-4">
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
+                    <p className="font-bold">Error</p>
+                    <p>{error}</p>
+                </div>
+            )}
             <section className="mb-12">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-10 rounded-lg shadow-md">
                     <h1 className="text-4xl font-bold mb-4">Welcome to Shirtso</h1>
