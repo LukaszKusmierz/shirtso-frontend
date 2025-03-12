@@ -25,7 +25,7 @@ const ProductCard = ({ product }) => {
                 </div>
 
                 <div className="flex justify-between items-center">
-          <span className={`text-xs px-2 py-1 rounded-full ${getStockStatusColor()}`}>
+          <span className={`text-xs px-2 py-1 rounded-full ${getStockStatusColor(stock)}`}>
             {stock === 0 ? 'Out of stock' : `${stock} in stock`}
           </span>
 

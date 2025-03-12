@@ -9,7 +9,7 @@ const Footer = () => {
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Shirtso</h3>
                         <p className="text-gray-300">
-                            Your one-stop shop for quality clothing and accessories.
+                            Najlepsza moda męska w jednym miejscu. SHIRTSO Cię ubierze!
                         </p>
                     </div>
 

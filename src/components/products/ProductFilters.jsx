@@ -65,7 +65,7 @@ const ProductFilters = ({ onFilterChange }) => {
         };
 
         fetchSizes();
-    }, [selectedCategory, selectedSubcategory]);
+    }, [selectedSubcategory]);
 
     // Update filters when selections change
     useEffect(() => {
