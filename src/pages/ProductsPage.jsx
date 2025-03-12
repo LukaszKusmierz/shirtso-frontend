@@ -54,12 +54,12 @@ const ProductsPage = () => {
 
                 if (filters.search) {
                     data = await getProductsByName(filters.search);
+                } else if (filters.size && filters.subcategoryId) {
+                    data = await getProductsBySizeAndSubcategory(filters.size, filters.subcategoryId);
                 } else if (filters.subcategoryId) {
                     data = await getProductsBySubcategory(filters.subcategoryId);
                 } else if (filters.size) {
                     data = await getProductsBySize(filters.size);
-                } else if (filters.size && filters.subcategoryId) {
-                    data = await getProductsBySizeAndSubcategory(filters.size, filters.subcategoryId);
                 } else if (filters.inStock) {
                     data = await getProductsInStock();
                 } else {
