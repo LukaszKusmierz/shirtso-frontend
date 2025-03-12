@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetails from '../components/products/ProductDetails';
 import { getAllProducts } from '../services/productService';
+import Spinner from "../components/common/Spinner";
+import Alert from "../components/common/Alert";
 
 const ProductDetailPage = () => {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -36,11 +39,15 @@ const ProductDetailPage = () => {
         fetchProduct();
     }, [id]);
 
+    const handleGoBack = () => {
+        navigate(-1);
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto p-4">
                 <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                    <Spinner size="lg" />
                 </div>
             </div>
         );
@@ -49,21 +56,31 @@ const ProductDetailPage = () => {
     if (error) {
         return (
             <div className="container mx-auto p-4">
-                <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
-                    {error}
-                </div>
-                <Link to="/products" className="text-blue-600 hover:underline">
-                    ← Back to Products
-                </Link>
+                <Alert
+                    type="error"
+                    title="Error"
+                    message={error}
+                    dismissible={false}
+                    className="mb-4"
+                />
+                <button
+                    onClick={handleGoBack}
+                    className="text-blue-600 hover:underline flex items-center"
+                >
+                    <span className="mr-1">←</span> Back to Products
+                </button>
             </div>
         );
     }
 
     return (
         <div className="container mx-auto p-4">
-            <Link to="/products" className="text-blue-600 hover:underline block mb-4">
-                ← Back to Products
-            </Link>
+            <button
+                onClick={handleGoBack}
+                className="text-blue-600 hover:underline flex items-center mb-4"
+            >
+                <span className="mr-1">←</span> Back to Products
+            </button>
 
             <ProductDetails product={product} />
         </div>

@@ -1,15 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {getStockStatusColor} from "../../utils/helpers";
 
 const ProductCard = ({ product }) => {
     const { productId, productName, price, currency, description, stock, size } = product;
-
-    // Determine stock status color
-    const getStockStatusColor = () => {
-        if (stock === 0) return 'bg-red-100 text-red-800';
-        if (stock < 3) return 'bg-yellow-100 text-yellow-800';
-        return 'bg-green-100 text-green-800';
-    };
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:scale-105">

@@ -5,9 +5,9 @@ import ProductFilters from '../components/products/ProductFilters';
 import {
     getAllProducts,
     getProductsBySubcategory,
-    getProductsBySize,
     getProductsInStock,
-    getProductsByName
+    getProductsByName,
+    getProductsBySizeAndSubcategory
 } from '../services/productService';
 
 const ProductsPage = () => {
@@ -56,7 +56,7 @@ const ProductsPage = () => {
                 } else if (filters.subcategoryId) {
                     data = await getProductsBySubcategory(filters.subcategoryId);
                 } else if (filters.size) {
-                    data = await getProductsBySize(filters.size);
+                    data = await getProductsBySizeAndSubcategory(filters.size, filters.subcategoryId);
                 } else if (filters.inStock) {
                     data = await getProductsInStock();
                 } else {

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getAllCategories, getSubcategoriesByCategory } from '../../services/categoryService';
+import {getAllCategories, getSubcategoriesByCategory} from '../../services/categoryService';
+import {getSizes} from "../../services/productService";
 
 const ProductFilters = ({ onFilterChange }) => {
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
+    const [sizes, setSizes] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedSubcategory, setSelectedSubcategory] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
@@ -11,7 +13,7 @@ const ProductFilters = ({ onFilterChange }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
 
     // Fetch categories on component mount
     useEffect(() => {
@@ -48,6 +50,22 @@ const ProductFilters = ({ onFilterChange }) => {
 
         fetchSubcategories();
     }, [selectedCategory]);
+
+    useEffect(() => {
+        const fetchSizes = async () => {
+            try {
+                const data = await getSizes();
+                setSizes(data);
+            } catch (err) {
+                setError('Failed to load sizes');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSizes();
+    }, [selectedCategory, selectedSubcategory]);
 
     // Update filters when selections change
     useEffect(() => {

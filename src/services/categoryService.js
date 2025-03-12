@@ -11,3 +11,7 @@ export const getAllCategoriesWithSubcategories = () => {
 export const getSubcategoriesByCategory = (categoryId) => {
     return api.get(`/subcategories/${categoryId}`);
 };
+
+export const getAllSizes = () => {
+    return api.get('/size');
+}
