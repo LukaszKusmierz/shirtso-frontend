@@ -57,3 +57,8 @@ export const getRolesFromToken = (token) => {
     const payload = decodeJwtToken(token);
     return payload ? payload.roles || [] : null;
 };
+
+// export const getEmailFromToken = (token) => {
+//     const payload = decodeJwtToken(token);
+//     return payload ? payload.email : null;
+// }

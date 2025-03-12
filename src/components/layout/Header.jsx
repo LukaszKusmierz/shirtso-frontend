@@ -30,7 +30,7 @@ const Header = () => {
 
                         {currentUser ? (
                             <>
-                                <span className="text-gray-700">Hello, {currentUser.username}</span>
+                                <span className="text-gray-700">Hello, {currentUser.userName}</span>
                                 <button
                                     onClick={handleLogout}
                                     className="text-gray-700 hover:text-blue-600"

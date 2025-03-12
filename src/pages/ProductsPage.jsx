@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useLocation } from 'react-router-dom';
 import ProductList from '../components/products/ProductList';
 import ProductFilters from '../components/products/ProductFilters';
@@ -7,7 +7,8 @@ import {
     getProductsBySubcategory,
     getProductsInStock,
     getProductsByName,
-    getProductsBySizeAndSubcategory
+    getProductsBySizeAndSubcategory,
+    getProductsBySize
 } from '../services/productService';
 
 const ProductsPage = () => {
@@ -56,6 +57,8 @@ const ProductsPage = () => {
                 } else if (filters.subcategoryId) {
                     data = await getProductsBySubcategory(filters.subcategoryId);
                 } else if (filters.size) {
+                    data = await getProductsBySize(filters.size);
+                } else if (filters.size && filters.subcategoryId) {
                     data = await getProductsBySizeAndSubcategory(filters.size, filters.subcategoryId);
                 } else if (filters.inStock) {
                     data = await getProductsInStock();
@@ -87,12 +90,12 @@ const ProductsPage = () => {
         setFilteredProducts(result);
     }, [products, filters.inStock]);
 
-    const handleFilterChange = (newFilters) => {
+    const handleFilterChange = useCallback((newFilters) => {
         setFilters((prev) => ({
             ...prev,
             ...newFilters,
         }));
-    };
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
