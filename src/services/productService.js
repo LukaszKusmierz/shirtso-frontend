@@ -40,6 +40,10 @@ export const getProductsBySize = (size) => {
     return api.get(`/products?size=${size}`);
 };
 
+export const getProductById = (productId) => {
+    return api.get(`/products/${productId}`);
+}
+
 export const addNewProduct = (productData) => {
     const transformedData = {
         productName: productData.productName,

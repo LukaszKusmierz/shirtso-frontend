@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetails from '../components/products/ProductDetails';
-import { getAllProducts } from '../services/productService';
+import {getProductById} from '../services/productService';
 import Spinner from "../components/common/Spinner";
 import Alert from "../components/common/Alert";
 
@@ -18,16 +18,9 @@ const ProductDetailPage = () => {
             setError(null);
 
             try {
-                // In a real app, you would have a dedicated API endpoint to get a product by ID
-                // For now, we'll get all products and find the one with matching ID
-                const products = await getAllProducts();
-                const foundProduct = products.find((p) => p.productId === id);
+                const product = await getProductById(id);
+                setProduct(product);
 
-                if (foundProduct) {
-                    setProduct(foundProduct);
-                } else {
-                    setError('Product not found');
-                }
             } catch (err) {
                 setError('Failed to load product');
                 console.error(err);
