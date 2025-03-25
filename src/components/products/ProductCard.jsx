@@ -4,18 +4,32 @@ import {getStockStatusColor} from "../../utils/helpers";
 
 const ProductCard = ({ product }) => {
     const { productId, productName, price, currency, description, stock, size } = product;
-    const hasImages = product.imageMappings && product.imageMappings.length > 0;
+    const images = product.images || product.imageMappings || [];
+    const hasImages = images > 0;
     const primaryImage = hasImages
         ? product.imageMappings.find(image => image.isPrimary) || product.imageMappings[0] : null;
+    const getImageUrl = (imagePath) => {
+        const baseUrl = process.env.REACT_APP_STATIC_URL || '';
+
+        if (imagePath.startsWith('/')) {
+            return `${baseUrl}${imagePath}`;
+        }
+        return `${baseUrl}/${imagePath}`;
+    }
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:scale-105">
             <div className="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
                 {primaryImage ? (
                     <img
-                        src={`${process.env.REACT_APP_STATIC_URL}` + primaryImage.imageUrl}
+                        src={getImageUrl(primaryImage.imageUrl)}
                         alt={primaryImage.altText || productName}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                            console.error(`Failed to load image: ${e.target.src}`);
+                            e.target.src = '/placeholder-product.png'; // Fallback image
+                            e.target.classList.add('error-image');
+                        }}
                     />
                 ) : (
                     <span className="text-gray-400 text-4xl">

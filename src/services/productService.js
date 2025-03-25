@@ -54,6 +54,7 @@ export const getProductWithImages = async (productId) => {
         const images = await getProductImages(productId);
         return {
             ...product,
+            images: images,
             imageMappings: images
         };
     } catch (error) {
@@ -71,12 +72,14 @@ export const getProductsWithImages = async (productsFunction, ...args) => {
                     const images = await getProductImages(product.productId);
                     return {
                         ...product,
+                        images: images,
                         imageMappings: images
                     };
                 } catch (error) {
                     console.warn(`Failed to fetch images for product ${product.productId}:`, error);
                     return {
                         ...product,
+                        images: [],
                         imageMappings: []
                     };
                 }

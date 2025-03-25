@@ -7,13 +7,22 @@ const ProductDetails = ({ product }) => {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const hasImages = product?.imageMappings && product.imageMappings.length > 0;
+    const images = product?.images || product?.imageMappings || [];
+    const hasImages = images > 0;
     const sortedImages = hasImages
-        ? [...product.imageMappings].sort((a, b) => a.displayOrder - b.displayOrder)
+        ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
         : [];
     const primaryImageIndex = hasImages
         ? sortedImages.findIndex(images => images.isPrimary)
         : -1;
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return '/placeholder-product.png';
+        const baseUrl = process.env.REACT_APP_STATIC_URL || '';
+        if (imagePath.startsWith('/')) {
+            return `${baseUrl}${imagePath}`;
+        }
+        return `${baseUrl}/${imagePath}`;
+    };
 
     useEffect(() => {
         if (!product) return;
@@ -66,9 +75,14 @@ const ProductDetails = ({ product }) => {
                     <div className="h-64 md:h-96 bg-gray-200 flex items-center justify-center overflow-hidden">
                         {hasImages && sortedImages.length > 0 ? (
                             <img
-                                src={sortedImages[selectedImageIndex].imageUrl}
+                                src={getImageUrl(sortedImages[selectedImageIndex].imageUrl)}
                                 alt={sortedImages[selectedImageIndex].altText || productName}
                                 className="w-full h-full object-contain"
+                                onError={(e) => {
+                                    console.error(`Failed to load image: ${e.target.src}`);
+                                    e.target.src = '/placeholder-product.png'; // Fallback image
+                                    e.target.classList.add('error-image');
+                                }}
                             />
                         ) : (
                             <span className="text-gray-400 text-6xl">
@@ -89,9 +103,13 @@ const ProductDetails = ({ product }) => {
                                     onClick={() => handleImageClick(index)}
                                 >
                                     <img
-                                        src={image.imageUrl}
+                                        src={getImageUrl(image.imageUrl)}
                                         alt={image.altText || `Product view ${index + 1}`}
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src = '/placeholder-product.png'; // Fallback image
+                                            e.target.classList.add('error-image');
+                                        }}
                                     />
                                 </div>
                             ))}
