@@ -44,6 +44,52 @@ export const getProductById = (productId) => {
     return api.get(`/products/${productId}`);
 }
 
+export const getProductImages = (productId) => {
+    return api.get(`/products/${productId}/images`);
+}
+
+export const getProductWithImages = async (productId) => {
+    try {
+        const product = await getProductById(productId);
+        const images = await getProductImages(productId);
+        return {
+            ...product,
+            imageMappings: images
+        };
+    } catch (error) {
+        console.error('Failed to fetch product with images:', error);
+        throw error;
+    }
+}
+
+export const getProductsWithImages = async (productsFunction, ...args) => {
+    try {
+        const products = await productsFunction(...args);
+        const productsWithImages = await Promise.all(
+            products.map(async (product) => {
+                try {
+                    const images = await getProductImages(product.productId);
+                    return {
+                        ...product,
+                        imageMappings: images
+                    };
+                } catch (error) {
+                    console.warn(`Failed to fetch images for product ${product.productId}:`, error);
+                    return {
+                        ...product,
+                        imageMappings: []
+                    };
+                }
+            })
+        );
+
+        return productsWithImages;
+    } catch (error) {
+        console.error('Failed to fetch products with images:', error);
+        throw error;
+    }
+}
+
 export const addNewProduct = (productData) => {
     const transformedData = {
         productName: productData.productName,

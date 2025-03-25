@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetails from '../components/products/ProductDetails';
-import {getProductById} from '../services/productService';
+import { getProductWithImages } from '../services/productService';
 import Spinner from "../components/common/Spinner";
 import Alert from "../components/common/Alert";
 
@@ -18,8 +18,8 @@ const ProductDetailPage = () => {
             setError(null);
 
             try {
-                const product = await getProductById(id);
-                setProduct(product);
+                const productWithImages = await getProductWithImages(id);
+                setProduct(productWithImages);
 
             } catch (err) {
                 setError('Failed to load product');

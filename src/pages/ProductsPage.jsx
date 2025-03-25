@@ -8,7 +8,7 @@ import {
     getProductsInStock,
     getProductsByName,
     getProductsBySizeAndSubcategory,
-    getProductsBySize
+    getProductsBySize, getProductsWithImages
 } from '../services/productService';
 
 const ProductsPage = () => {
@@ -26,7 +26,6 @@ const ProductsPage = () => {
 
     const location = useLocation();
 
-    // Parse URL query parameters
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const categoryId = searchParams.get('categoryId');
@@ -43,29 +42,33 @@ const ProductsPage = () => {
         }));
     }, [location.search]);
 
-    // Fetch products based on current filters
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             setError(null);
 
             try {
-                let data;
+                let productFunction;
+                let args = [];
 
                 if (filters.search) {
-                    data = await getProductsByName(filters.search);
+                    productFunction = getProductsByName;
+                    args = [filters.search];
                 } else if (filters.size && filters.subcategoryId) {
-                    data = await getProductsBySizeAndSubcategory(filters.size, filters.subcategoryId);
+                    productFunction = getProductsBySizeAndSubcategory;
+                    args = [filters.size, filters.subcategoryId];
                 } else if (filters.subcategoryId) {
-                    data = await getProductsBySubcategory(filters.subcategoryId);
+                    productFunction = getProductsBySubcategory;
+                    args = [filters.subcategoryId];
                 } else if (filters.size) {
-                    data = await getProductsBySize(filters.size);
+                    productFunction = getProductsBySize;
+                    args = [filters.size];
                 } else if (filters.inStock) {
-                    data = await getProductsInStock();
+                    productFunction = getProductsInStock;
                 } else {
-                    data = await getAllProducts();
+                    productFunction = getAllProducts;
                 }
-
+                const data = await getProductsWithImages(productFunction, ...args);
                 setProducts(data);
             } catch (err) {
                 setError('Failed to load products');
