@@ -1,13 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import {getImageUrl} from "../../utils/helpers";
 
 const ProductDetails = ({ product }) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [imagesLoaded, setImagesLoaded] = useState({});
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const images = product?.images || product?.imageMappings || [];
+    const images = product && (
+        Array.isArray(product.images) ? product.images :
+            Array.isArray(product.imageMappings) ? product.imageMappings :
+                []
+    );
     const hasImages = images > 0;
     const sortedImages = hasImages
         ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
@@ -15,14 +21,6 @@ const ProductDetails = ({ product }) => {
     const primaryImageIndex = hasImages
         ? sortedImages.findIndex(images => images.isPrimary)
         : -1;
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return '/placeholder-product.png';
-        const baseUrl = process.env.REACT_APP_STATIC_URL || '';
-        if (imagePath.startsWith('/')) {
-            return `${baseUrl}${imagePath}`;
-        }
-        return `${baseUrl}/${imagePath}`;
-    };
 
     useEffect(() => {
         if (!product) return;
@@ -49,6 +47,13 @@ const ProductDetails = ({ product }) => {
         setSelectedImageIndex(index);
     };
 
+    const handleImageError = (index) => {
+        setImagesLoaded(prev => ({
+            ...prev,
+            [index]: false
+        }));
+    };
+
     if (!product) {
         return (
             <div className="text-center p-8">
@@ -73,16 +78,12 @@ const ProductDetails = ({ product }) => {
                 <div className="md:w-1/2">
                     {/* Main Image Display */}
                     <div className="h-64 md:h-96 bg-gray-200 flex items-center justify-center overflow-hidden">
-                        {hasImages && sortedImages.length > 0 ? (
+                        {hasImages && sortedImages.length > 0 && imagesLoaded[selectedImageIndex] !== false ? (
                             <img
                                 src={getImageUrl(sortedImages[selectedImageIndex].imageUrl)}
                                 alt={sortedImages[selectedImageIndex].altText || productName}
                                 className="w-full h-full object-contain"
-                                onError={(e) => {
-                                    console.error(`Failed to load image: ${e.target.src}`);
-                                    e.target.src = '/placeholder-product.png'; // Fallback image
-                                    e.target.classList.add('error-image');
-                                }}
+                                onError={() => handleImageError(selectedImageIndex)}
                             />
                         ) : (
                             <span className="text-gray-400 text-6xl">

@@ -1,21 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {getStockStatusColor} from "../../utils/helpers";
+import {getStockStatusColor, getImageUrl, getPlaceholderUrl} from "../../utils/helpers";
 
 const ProductCard = ({ product }) => {
     const { productId, productName, price, currency, description, stock, size } = product;
     const images = product.images || product.imageMappings || [];
-    const hasImages = images > 0;
+    const hasImages = Array.isArray(images) && images.length > 0;
     const primaryImage = hasImages
         ? product.imageMappings.find(image => image.isPrimary) || product.imageMappings[0] : null;
-    const getImageUrl = (imagePath) => {
-        const baseUrl = process.env.REACT_APP_STATIC_URL || '';
-
-        if (imagePath.startsWith('/')) {
-            return `${baseUrl}${imagePath}`;
-        }
-        return `${baseUrl}/${imagePath}`;
-    }
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:scale-105">
@@ -27,7 +19,7 @@ const ProductCard = ({ product }) => {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                             console.error(`Failed to load image: ${e.target.src}`);
-                            e.target.src = '/placeholder-product.png'; // Fallback image
+                            e.target.src = getPlaceholderUrl();
                             e.target.classList.add('error-image');
                         }}
                     />
