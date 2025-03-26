@@ -5,12 +5,17 @@ import { useAuth } from '../../hooks/useAuth';
 const Header = () => {
     const { currentUser, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
+        setIsUserMenuOpen(false);
     };
+
+    // Check if user has admin role
+    const isAdmin = currentUser && currentUser.roles && currentUser.roles.includes('USER_WRITE');
 
     return (
         <header className="bg-white shadow-md">
@@ -29,15 +34,52 @@ const Header = () => {
                         </Link>
 
                         {currentUser ? (
-                            <>
-                                <span className="text-gray-700">Hello, {currentUser.userName}</span>
+                            <div className="relative">
                                 <button
-                                    onClick={handleLogout}
-                                    className="text-gray-700 hover:text-blue-600"
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center text-gray-700 hover:text-blue-600 focus:outline-none"
                                 >
-                                    Logout
+                                    <span className="mr-1">Hello, {currentUser.userName}</span>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                            </>
+
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                        <Link
+                                            to="/profile"
+                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            Your Profile
+                                        </Link>
+
+                                        {isAdmin && (
+                                            <Link
+                                                to="/admin/products"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                Admin Dashboard
+                                            </Link>
+                                        )}
+
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <>
                                 <Link to="/login" className="text-gray-700 hover:text-blue-600">
@@ -93,7 +135,24 @@ const Header = () => {
 
                         {currentUser ? (
                             <>
-                                <span className="block py-2 text-gray-700">Hello, {currentUser.username}</span>
+                                <Link
+                                    to="/profile"
+                                    className="block py-2 text-gray-700 hover:text-blue-600"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Your Profile
+                                </Link>
+
+                                {isAdmin && (
+                                    <Link
+                                        to="/admin/products"
+                                        className="block py-2 text-gray-700 hover:text-blue-600"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Admin Dashboard
+                                    </Link>
+                                )}
+
                                 <button
                                     onClick={() => {
                                         handleLogout();
