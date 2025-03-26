@@ -7,7 +7,7 @@ const ProductCard = ({ product }) => {
     const images = product.images || product.imageMappings || [];
     const hasImages = Array.isArray(images) && images.length > 0;
     const primaryImage = hasImages
-        ? product.imageMappings.find(image => image.isPrimary) || product.imageMappings[0] : null;
+        ? images.find(image => image.isPrimary) || images[0] : null;
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:scale-105">
@@ -18,9 +18,11 @@ const ProductCard = ({ product }) => {
                         alt={primaryImage.altText || productName}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                            console.error(`Failed to load image: ${e.target.src}`);
-                            e.target.src = getPlaceholderUrl();
-                            e.target.classList.add('error-image');
+                            if (!e.target.classList.contains('error-image')) {
+                                console.error(`Failed to load image: ${e.target.src}`);
+                                e.target.src = getPlaceholderUrl();
+                                e.target.classList.add('error-image');
+                            }
                         }}
                     />
                 ) : (

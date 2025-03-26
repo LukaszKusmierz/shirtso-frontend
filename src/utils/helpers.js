@@ -17,10 +17,15 @@ export const getStockStatusColor = (stock) => {
 export const getImageUrl = (imagePath) => {
     if (!imagePath) return getPlaceholderUrl();
     const baseUrl = process.env.REACT_APP_STATIC_URL || '';
+    let fullUrl;
     if (imagePath.startsWith('/')) {
-        return `${baseUrl}${imagePath}`;
+        fullUrl = `${baseUrl}${imagePath}`;
+    } else {
+        fullUrl = `${baseUrl}/${imagePath}`;
     }
-    return `${baseUrl}/${imagePath}`;
+
+    console.log("Generated image URL:", fullUrl);
+    return fullUrl;
 };
 
 export const getPlaceholderUrl = () => {

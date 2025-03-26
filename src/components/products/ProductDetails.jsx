@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import {getImageUrl} from "../../utils/helpers";
+import {getImageUrl, getPlaceholderUrl} from "../../utils/helpers";
 
 const ProductDetails = ({ product }) => {
     const [quantity, setQuantity] = useState(1);
@@ -14,7 +14,7 @@ const ProductDetails = ({ product }) => {
             Array.isArray(product.imageMappings) ? product.imageMappings :
                 []
     );
-    const hasImages = images > 0;
+    const hasImages = Array.isArray(images) && images.length > 0;
     const sortedImages = hasImages
         ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
         : [];
@@ -108,8 +108,11 @@ const ProductDetails = ({ product }) => {
                                         alt={image.altText || `Product view ${index + 1}`}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
-                                            e.target.src = '/placeholder-product.png'; // Fallback image
-                                            e.target.classList.add('error-image');
+                                            if (!e.target.classList.contains('error-image')) {
+                                                console.error(`Failed to load image: ${e.target.src}`);
+                                                e.target.src = getPlaceholderUrl();
+                                                e.target.classList.add('error-image');
+                                            }
                                         }}
                                     />
                                 </div>
