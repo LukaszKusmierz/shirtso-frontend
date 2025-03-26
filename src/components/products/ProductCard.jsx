@@ -27,7 +27,7 @@ const ProductCard = ({ product }) => {
                     />
                 ) : (
                     <span className="text-gray-400 text-4xl">
-                        <i className="fas fa-tshirt"></i>
+                        <img src={getPlaceholderUrl()} alt={"unavailable"}></img>
                     </span>
                 )}
             </div>
