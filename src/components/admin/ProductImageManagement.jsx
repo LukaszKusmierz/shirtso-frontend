@@ -10,7 +10,7 @@ import Alert from '../common/Alert';
 import NewProductForm from './NewProductForm';
 import ProductsTable from './ProductsTable';
 
-const ProductManagement = () => {
+const ProductImageManagement = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
@@ -173,4 +173,4 @@ const ProductManagement = () => {
     );
 };
 
-export default ProductManagement;
+export default ProductImageManagement;
