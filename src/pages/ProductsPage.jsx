@@ -8,7 +8,7 @@ import {
     getProductsInStock,
     getProductsByName,
     getProductsBySizeAndSubcategory,
-    getProductsBySize, getProductsWithImages
+    getProductsBySize, getProductsWithImages, getProductsByCategoryId
 } from '../services/productService';
 
 const ProductsPage = () => {
@@ -60,6 +60,9 @@ const ProductsPage = () => {
                 } else if (filters.subcategoryId) {
                     productFunction = getProductsBySubcategory;
                     args = [filters.subcategoryId];
+                } else if (filters.categoryId) {
+                    productFunction = getProductsByCategoryId;
+                    args = [filters.categoryId];
                 } else if (filters.size) {
                     productFunction = getProductsBySize;
                     args = [filters.size];
@@ -79,7 +82,7 @@ const ProductsPage = () => {
         };
 
         fetchProducts();
-    }, [filters.subcategoryId, filters.size, filters.inStock, filters.search]);
+    }, [filters.subcategoryId, filters.size, filters.inStock, filters.search, filters.categoryId]);
 
     // Apply client-side filtering for additional filter combinations
     useEffect(() => {

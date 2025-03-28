@@ -48,6 +48,10 @@ export const getProductImages = (productId) => {
     return api.get(`/products/${productId}/images`);
 }
 
+export const getProductsByCategoryId = (categoryId) => {
+    return api.get(`/products?categoryId=${categoryId}`);
+}
+
 export const getProductWithImages = async (productId) => {
     try {
         const product = await getProductById(productId);
