@@ -1,4 +1,4 @@
-import api from './api.js';
+import api from './Api.jsx';
 
 export const getAllCategories = () => {
     return api.get('/categories');

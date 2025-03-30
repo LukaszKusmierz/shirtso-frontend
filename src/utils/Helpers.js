@@ -48,3 +48,10 @@ export const getSortedImages = (images) => {
     if (!Array.isArray(images) || images.length === 0) return [];
     return [...images].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 }
+
+export function formatMethodName(methodId) {
+    return methodId
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ');
+}

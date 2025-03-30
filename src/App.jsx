@@ -1,13 +1,18 @@
 import React from 'react';
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { useAuth } from "./hooks/useAuth";
+import { useAuth } from "./hooks/UseAuth";
 import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import PaymentPage from './pages/PaymentPage';
+import OrdersPage from './pages/OrdersPage';
+import OrderDetailPage from './pages/OrderDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductImagePage from './pages/admin/AdminProductImagePage';
@@ -62,6 +67,33 @@ const App = () => {
                             </ProtectedRoute>
                         } />
 
+                        {/* Cart and Order routes */}
+                        <Route path="/cart" element={
+                            <ProtectedRoute>
+                                <CartPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/checkout" element={
+                            <ProtectedRoute>
+                                <CheckoutPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/checkout/payment/:orderId" element={
+                            <ProtectedRoute>
+                                <PaymentPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/orders" element={
+                            <ProtectedRoute>
+                                <OrdersPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/orders/:orderId" element={
+                            <ProtectedRoute>
+                                <OrderDetailPage />
+                            </ProtectedRoute>
+                        } />
+
                         {/* Protected admin routes */}
                         <Route path="/admin/products" element={
                             <AdminRoute>
@@ -84,4 +116,3 @@ const App = () => {
 };
 
 export default App;
-

@@ -9,7 +9,7 @@ import {
     getProductsByName,
     getProductsBySizeAndSubcategory,
     getProductsBySize, getProductsWithImages, getProductsByCategoryId
-} from '../services/productService';
+} from '../services/ProductService';
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -23,7 +23,6 @@ const ProductsPage = () => {
         inStock: false,
         search: '',
     });
-
     const location = useLocation();
 
     useEffect(() => {
@@ -84,11 +83,9 @@ const ProductsPage = () => {
         fetchProducts();
     }, [filters.subcategoryId, filters.size, filters.inStock, filters.search, filters.categoryId]);
 
-    // Apply client-side filtering for additional filter combinations
     useEffect(() => {
         let result = [...products];
 
-        // Additional client-side filtering
         if (filters.inStock) {
             result = result.filter((product) => product.stock > 0);
         }
@@ -105,7 +102,7 @@ const ProductsPage = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        // Update search filter
+
         setFilters((prev) => ({
             ...prev,
             search: e.target.search.value,

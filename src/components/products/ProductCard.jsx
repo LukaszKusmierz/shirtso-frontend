@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {getStockStatusColor, getImageUrl, getPlaceholderUrl} from "../../utils/helpers";
+import {getStockStatusColor, getImageUrl, getPlaceholderUrl} from "../../utils/Helpers";
 
 const ProductCard = ({ product }) => {
     const { productId, productName, price, currency, description, stock, size } = product;

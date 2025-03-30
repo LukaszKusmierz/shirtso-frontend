@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getStockStatusColor } from '../../utils/helpers';
+import { getStockStatusColor } from '../../utils/Helpers';
 
 const ProductsTable = ({ products }) => {
     const [searchTerm, setSearchTerm] = useState('');

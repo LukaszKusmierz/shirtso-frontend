@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetails from '../components/products/ProductDetails';
-import { getProductWithImages } from '../services/productService';
+import { getProductWithImages } from '../services/ProductService';
 import Spinner from "../components/common/Spinner";
 import Alert from "../components/common/Alert";
 

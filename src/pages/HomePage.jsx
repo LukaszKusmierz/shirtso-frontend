@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllCategories } from '../services/categoryService';
-import { getProductsInStock } from '../services/productService';
+import { getAllCategories } from '../services/CategoryService';
+import { getProductsInStock } from '../services/ProductService';
 import ProductCard from '../components/products/ProductCard';
 
 const HomePage = () => {
@@ -13,15 +13,11 @@ const HomePage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch categories and some products for the homepage
                 const [categoriesData, productsData] = await Promise.all([
                     getAllCategories(),
                     getProductsInStock()
                 ]);
-
                 setCategories(categoriesData);
-
-                // Just get a few products for the featured section
                 setFeaturedProducts(productsData.slice(0, 4));
             } catch (err) {
                 setError('Failed to load data');

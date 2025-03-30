@@ -1,12 +1,18 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import {getImageUrl, getPlaceholderUrl} from "../../utils/helpers";
+import { useAuth } from '../../hooks/UseAuth';
+import { addToCart } from '../../services/CartService';
+import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
+import Alert from '../common/Alert';
+import Button from '../common/Button';
 
 const ProductDetails = ({ product }) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [imagesLoaded, setImagesLoaded] = useState({});
+    const [addingToCart, setAddingToCart] = useState(false);
+    const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const images = product && (
@@ -19,7 +25,7 @@ const ProductDetails = ({ product }) => {
         ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
         : [];
     const primaryImageIndex = hasImages
-        ? sortedImages.findIndex(images => images.isPrimary)
+        ? sortedImages.findIndex(image => image.isPrimary)
         : -1;
 
     useEffect(() => {
@@ -32,15 +38,34 @@ const ProductDetails = ({ product }) => {
         }
     }, [product, primaryImageIndex, sortedImages.length]);
 
-    const handleAddToCart = () => {
-        // In a real app, you would implement cart functionality
-        // For now, we'll just show an alert
+    const handleAddToCart = async () => {
         if (!currentUser) {
-            navigate('/login');
+            navigate('/login', { state: { from: `/products/${product.productId}` } });
             return;
         }
 
-        alert(`Added ${quantity} ${productName} to cart`);
+        if (quantity < 1 || quantity > product.stock) {
+            setError('Please select a valid quantity.');
+            return;
+        }
+
+        setAddingToCart(true);
+        setError(null);
+
+        try {
+            await addToCart(product.productId, quantity);
+            setSuccessMessage(`Added ${quantity} ${product.productName} to cart!`);
+
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+                setSuccessMessage(null);
+            }, 3000);
+        } catch (err) {
+            console.error('Failed to add to cart:', err);
+            setError('Failed to add item to cart. Please try again.');
+        } finally {
+            setAddingToCart(false);
+        }
     };
 
     const handleImageClick = (index) => {
@@ -74,6 +99,26 @@ const ProductDetails = ({ product }) => {
 
     return (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {error && (
+                <Alert
+                    type="error"
+                    message={error}
+                    dismissible={true}
+                    onDismiss={() => setError(null)}
+                    className="m-4"
+                />
+            )}
+
+            {successMessage && (
+                <Alert
+                    type="success"
+                    message={successMessage}
+                    dismissible={true}
+                    onDismiss={() => setSuccessMessage(null)}
+                    className="m-4"
+                />
+            )}
+
             <div className="md:flex">
                 <div className="md:w-1/2">
                     {/* Main Image Display */}
@@ -86,9 +131,11 @@ const ProductDetails = ({ product }) => {
                                 onError={() => handleImageError(selectedImageIndex)}
                             />
                         ) : (
-                            <span className="text-gray-400 text-6xl">
-                                <img src={getPlaceholderUrl()} alt={"unavailable"}></img>
-                            </span>
+                            <img
+                                src={getPlaceholderUrl()}
+                                alt="Product placeholder"
+                                className="w-full h-full object-contain"
+                            />
                         )}
                     </div>
 
@@ -108,11 +155,7 @@ const ProductDetails = ({ product }) => {
                                         alt={image.altText || `Product view ${index + 1}`}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
-                                            if (!e.target.classList.contains('error-image')) {
-                                                console.error(`Failed to load image: ${e.target.src}`);
-                                                e.target.src = getPlaceholderUrl();
-                                                e.target.classList.add('error-image');
-                                            }
+                                            e.target.src = getPlaceholderUrl();
                                         }}
                                     />
                                 </div>
@@ -142,7 +185,12 @@ const ProductDetails = ({ product }) => {
                         <h2 className="text-lg font-semibold mb-2">Details</h2>
                         <ul className="text-gray-700">
                             <li><span className="font-medium">Supplier:</span> {supplier}</li>
-                            <li><span className="font-medium">Available Stock:</span> {stock}</li>
+                            <li>
+                                <span className="font-medium">Available Stock:</span>{' '}
+                                <span className={stock === 0 ? 'text-red-600' : stock < 5 ? 'text-orange-600' : 'text-green-600'}>
+                                    {stock}
+                                </span>
+                            </li>
                         </ul>
                     </div>
 
@@ -162,7 +210,7 @@ const ProductDetails = ({ product }) => {
                                         min="1"
                                         max={stock}
                                         value={quantity}
-                                        onChange={(e) => setQuantity(Math.min(stock, Math.max(1, parseInt(e.target.value))))}
+                                        onChange={(e) => setQuantity(Math.min(stock, Math.max(1, parseInt(e.target.value) || 1)))}
                                         className="w-12 h-8 text-center border-t border-b border-gray-300"
                                     />
                                     <button
@@ -174,22 +222,26 @@ const ProductDetails = ({ product }) => {
                                 </div>
                             </div>
 
-                            <button
+                            <Button
                                 onClick={handleAddToCart}
-                                className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+                                variant="primary"
+                                fullWidth={true}
+                                disabled={addingToCart}
+                                loading={addingToCart}
                             >
                                 Add to Cart
-                            </button>
+                            </Button>
                         </div>
                     ) : (
                         <div className="mb-6">
                             <p className="text-red-600 mb-4">This product is currently out of stock.</p>
-                            <button
-                                className="w-full py-2 px-4 bg-gray-300 text-gray-600 rounded cursor-not-allowed"
-                                disabled
+                            <Button
+                                variant="secondary"
+                                fullWidth={true}
+                                disabled={true}
                             >
                                 Out of Stock
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>

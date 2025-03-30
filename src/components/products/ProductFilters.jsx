@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {getAllCategories, getSubcategoriesByCategory} from '../../services/categoryService';
-import {getSizes} from "../../services/productService";
+import {getAllCategories, getSubcategoriesByCategory} from '../../services/CategoryService';
+import {getSizes} from "../../services/ProductService";
 
 const ProductFilters = ({ onFilterChange }) => {
     const [categories, setCategories] = useState([]);

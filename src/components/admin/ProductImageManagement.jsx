@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { getAllProducts, addNewProduct } from '../../services/productService';
-import { getAllCategories } from '../../services/categoryService';
-import { getSubcategoriesByCategory } from '../../services/categoryService';
-import { getSizes } from '../../services/productService';
+import { useAuth } from '../../hooks/UseAuth';
+import { getAllProducts, addNewProduct } from '../../services/ProductService';
+import { getAllCategories } from '../../services/CategoryService';
+import { getSubcategoriesByCategory } from '../../services/CategoryService';
+import { getSizes } from '../../services/ProductService';
 import Spinner from '../common/Spinner';
 import Alert from '../common/Alert';
 import NewProductForm from './NewProductForm';

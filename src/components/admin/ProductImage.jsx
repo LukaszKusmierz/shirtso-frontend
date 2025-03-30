@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/UseAuth';
 import {
     getProductWithImages,
     getProductImages
-} from '../../services/productService';
+} from '../../services/ProductService';
 import {
     getAllImages,
     createImage,
@@ -15,7 +15,7 @@ import {
 import Spinner from '../common/Spinner';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
-import { getImageUrl, getPlaceholderUrl } from '../../utils/helpers';
+import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 
 const ProductImageManagement = () => {
     const { id } = useParams();
