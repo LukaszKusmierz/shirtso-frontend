@@ -1,34 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import { getCart } from '../../services/CartService';
+import CartEventService from "../../services/CartEventService";
 
 const CartIcon = () => {
     const [cartItems, setCartItems] = useState(0);
     const { currentUser } = useAuth();
 
-    useEffect(() => {
+    const fetchCartItems = useCallback(async () => {
         if (!currentUser) {
             setCartItems(0);
             return;
         }
 
-        const fetchCartItems = async () => {
-            try {
-                const cart = await getCart();
-                setCartItems(cart.totalItems || 0);
-            } catch (err) {
-                console.error('Failed to fetch cart:', err);
-            }
-        };
+        try {
+            const cart = await getCart();
+            setCartItems(cart.totalItems || 0);
+        } catch (err) {
+            console.error('Failed to fetch cart:', err);
+        }
+    }, [currentUser]);
 
+    useEffect(() => {
         fetchCartItems();
-
-        // Set up polling to keep cart count updated
+        const unsubscribe = CartEventService.subscribe(fetchCartItems);
         const intervalId = setInterval(fetchCartItems, 60000); // Check every minute
 
-        return () => clearInterval(intervalId);
-    }, [currentUser]);
+        return () => {
+            clearInterval(intervalId);
+            unsubscribe();
+        };
+    }, [fetchCartItems]);
 
     return (
         <Link to="/cart" className="relative inline-flex items-center p-2">
