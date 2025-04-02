@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/UseAuth';
 import { getOrderDetails } from '../services/OrderService';
 import { processPayment, getPaymentMethods } from '../services/PaymentService';
@@ -9,6 +9,7 @@ import Spinner from '../components/common/Spinner';
 
 const PaymentPage = () => {
     const { orderId } = useParams();
+    const location = useLocation();
     const [order, setOrder] = useState(null);
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CREDIT_CARD');
@@ -25,6 +26,18 @@ const PaymentPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
+    // Get checkout details from location state
+    const checkoutDetails = location.state || {};
+    const {
+        subtotal,
+        shippingCost = 0,
+        discount = 0,
+        total,
+        address,
+        shippingMethod,
+        promoCode
+    } = checkoutDetails;
+
     useEffect(() => {
         if (!currentUser) {
             navigate('/login', { state: { from: `/checkout/payment/${orderId}` } });
@@ -38,7 +51,6 @@ const PaymentPage = () => {
                     getOrderDetails(orderId),
                     getPaymentMethods()
                 ]);
-                console.log("metody: " + methods);
                 setOrder(orderData);
                 setPaymentMethods(methods);
                 if (orderData.orderStatus !== 'NEW') {
@@ -138,6 +150,9 @@ const PaymentPage = () => {
             </div>
         );
     }
+
+    // Calculate display total if not provided
+    const displayTotal = total || (order?.totalAmount || 0);
 
     return (
         <div className="container mx-auto p-4">
@@ -281,7 +296,7 @@ const PaymentPage = () => {
                                         disabled={submitting}
                                         loading={submitting}
                                     >
-                                        {submitting ? 'Processing...' : `Pay ${order.totalAmount} PLN`}
+                                        {submitting ? 'Processing...' : `Pay ${displayTotal} PLN`}
                                     </Button>
                                 </div>
                             </form>
@@ -289,37 +304,54 @@ const PaymentPage = () => {
                     </div>
 
                     <div className="md:col-span-1">
-                        <div className="bg-white rounded-lg shadow-md p-6">
+                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
 
                             <div className="border-t border-b py-4 mb-4">
-                                <div className="max-h-60 overflow-y-auto">
-                                    {order.items.map((item) => (
-                                        <div key={item.orderItemId} className="flex justify-between py-2">
-                                            <div>
-                                                <span className="font-medium">{item.productName}</span>
-                                                <span className="text-gray-600 block">Qty: {item.quantity}</span>
-                                            </div>
-                                            <span>{item.total} PLN</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex justify-between mt-4">
+                                <div className="flex justify-between py-1">
                                     <span>Order ID:</span>
                                     <span>#{order.orderId}</span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex justify-between py-1">
                                     <span>Status:</span>
                                     <span>{order.orderStatus}</span>
                                 </div>
+                                <div className="flex justify-between py-1">
+                                    <span>Subtotal:</span>
+                                    <span>{subtotal || order.totalAmount} PLN</span>
+                                </div>
+                                {shippingCost > 0 && (
+                                    <div className="flex justify-between py-1">
+                                        <span>Shipping:</span>
+                                        <span>{shippingCost} PLN</span>
+                                    </div>
+                                )}
+                                {discount > 0 && (
+                                    <div className="flex justify-between py-1 text-green-600">
+                                        <span>Discount:</span>
+                                        <span>-{discount} PLN</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-between text-lg font-semibold">
                                 <span>Total:</span>
-                                <span>{order.totalAmount} PLN</span>
+                                <span>{displayTotal} PLN</span>
                             </div>
                         </div>
+
+                        {address && (
+                            <div className="bg-white rounded-lg shadow-md p-6">
+                                <h2 className="text-xl font-semibold mb-2">Shipping Address</h2>
+                                <div className="text-sm">
+                                    <p className="font-medium">{address.fullName}</p>
+                                    <p>{address.streetAddress}</p>
+                                    <p>{address.city}, {address.postalCode}</p>
+                                    <p>{address.country}</p>
+                                    <p>{address.phone}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

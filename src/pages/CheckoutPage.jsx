@@ -6,17 +6,18 @@ import { createOrder } from '../services/OrderService';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
+import AddressSelector from '../components/checkout/AddressSelector';
+import AddressForm from '../components/checkout/AddressForm';
+import ShippingMethodSelector from '../components/checkout/ShippingMethodSelector';
+import PromoCodeInput from '../components/checkout/PromoCodeInput';
 
 const CheckoutPage = () => {
     const [cart, setCart] = useState(null);
-    const [shippingDetails, setShippingDetails] = useState({
-        fullName: '',
-        streetAddress: '',
-        city: '',
-        postalCode: '',
-        country: '',
-        phone: ''
-    });
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [showAddressForm, setShowAddressForm] = useState(false);
+    const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
+    const [appliedPromoCode, setAppliedPromoCode] = useState(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -24,6 +25,12 @@ const CheckoutPage = () => {
     const [orderId, setOrderId] = useState(null);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+
+    // Calculate totals
+    const subtotal = cart?.totalAmount || 0;
+    const shippingCost = selectedShippingMethod?.price || 0;
+    const discount = discountAmount || 0;
+    const total = subtotal + shippingCost - discount;
 
     useEffect(() => {
         if (!currentUser) {
@@ -53,37 +60,64 @@ const CheckoutPage = () => {
         fetchCart();
     }, [currentUser, navigate]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setShippingDetails((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+    const handleAddressSelected = (address) => {
+        setSelectedAddress(address);
     };
 
-    const validateForm = () => {
-        const requiredFields = ['fullName', 'streetAddress', 'city', 'postalCode', 'country', 'phone'];
-        for (const field of requiredFields) {
-            if (!shippingDetails[field].trim()) {
-                setError(`Please fill in all required fields. Missing: ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
-                return false;
-            }
+    const handleNewAddressCreated = (address) => {
+        setSelectedAddress(address);
+        setShowAddressForm(false);
+    };
+
+    const handleShippingMethodSelected = (method) => {
+        setSelectedShippingMethod(method);
+    };
+
+    const handlePromoCodeApplied = (promoCode, discount) => {
+        setAppliedPromoCode(promoCode);
+        setDiscountAmount(discount);
+    };
+
+    const validateCheckout = () => {
+        if (!selectedAddress) {
+            setError('Please select or add a shipping address');
+            return false;
         }
+
+        if (!selectedShippingMethod) {
+            setError('Please select a shipping method');
+            return false;
+        }
+
         return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateForm()) return;
+        if (!validateCheckout()) return;
+
         setSubmitting(true);
         setError(null);
 
         try {
+            // First create the order from the cart
             const orderResponse = await createOrder(cart.cartId);
             setOrderId(orderResponse.orderId);
             setOrderCreated(true);
-            navigate(`/checkout/payment/${orderResponse.orderId}`);
+
+            // Navigate to payment page with all the necessary information
+            navigate(`/checkout/payment/${orderResponse.orderId}`, {
+                state: {
+                    subtotal,
+                    shippingCost,
+                    discount,
+                    total,
+                    shippingMethod: selectedShippingMethod,
+                    address: selectedAddress,
+                    promoCode: appliedPromoCode
+                }
+            });
         } catch (err) {
             console.error('Failed to create order:', err);
             setError('Failed to process your order. Please try again.');
@@ -117,116 +151,31 @@ const CheckoutPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                        {showAddressForm ? (
+                            <AddressForm
+                                onAddressCreated={handleNewAddressCreated}
+                                onCancel={() => setShowAddressForm(false)}
+                            />
+                        ) : (
+                            <AddressSelector
+                                onAddressSelected={handleAddressSelected}
+                                onNewAddressClick={() => setShowAddressForm(true)}
+                            />
+                        )}
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <ShippingMethodSelector
+                            onShippingMethodSelected={handleShippingMethodSelected}
+                        />
+                    </div>
+
                     <div className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
-
-                        <form onSubmit={handleSubmit}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Full Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="fullName"
-                                        value={shippingDetails.fullName}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Phone Number *
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={shippingDetails.phone}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Street Address *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="streetAddress"
-                                    value={shippingDetails.streetAddress}
-                                    onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        City *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={shippingDetails.city}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Postal Code *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="postalCode"
-                                        value={shippingDetails.postalCode}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Country *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="country"
-                                        value={shippingDetails.country}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-center mt-6">
-                                <a
-                                    href="/cart"
-                                    className="text-blue-600 hover:text-blue-800"
-                                >
-                                    ← Back to Cart
-                                </a>
-
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    disabled={submitting}
-                                    loading={submitting}
-                                >
-                                    Proceed to Payment
-                                </Button>
-                            </div>
-                        </form>
+                        <PromoCodeInput
+                            orderValue={subtotal}
+                            onPromoCodeApplied={handlePromoCodeApplied}
+                        />
                     </div>
                 </div>
 
@@ -251,17 +200,45 @@ const CheckoutPage = () => {
 
                                     <div className="flex justify-between mt-4">
                                         <span>Items ({cart.totalItems}):</span>
-                                        <span>{cart.totalAmount} PLN</span>
+                                        <span>{subtotal} PLN</span>
                                     </div>
+
                                     <div className="flex justify-between">
                                         <span>Shipping:</span>
-                                        <span>Free</span>
+                                        <span>{shippingCost > 0 ? `${shippingCost} PLN` : 'Free'}</span>
                                     </div>
+
+                                    {discount > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>Discount:</span>
+                                            <span>-{discount} PLN</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex justify-between text-lg font-semibold">
+                                <div className="flex justify-between text-lg font-semibold mb-6">
                                     <span>Total:</span>
-                                    <span>{cart.totalAmount} PLN</span>
+                                    <span>{total} PLN</span>
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="primary"
+                                    fullWidth={true}
+                                    disabled={submitting || !selectedAddress || !selectedShippingMethod}
+                                    loading={submitting}
+                                    onClick={handleSubmit}
+                                >
+                                    Proceed to Payment
+                                </Button>
+
+                                <div className="mt-4 text-center">
+                                    <a
+                                        href="/cart"
+                                        className="text-blue-600 hover:text-blue-800"
+                                    >
+                                        ← Back to Cart
+                                    </a>
                                 </div>
                             </>
                         )}
