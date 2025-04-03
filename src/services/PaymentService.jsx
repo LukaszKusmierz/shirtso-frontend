@@ -15,12 +15,24 @@ export const processPayment = (paymentData) => {
 //   cvv: "123"
 // }
 
+// export const getPaymentMethods = async () => {
+//     const response = await api.get('/payments/methods');
+//     return response.data.map(methodId => ({
+//         id: methodId,
+//         name: formatMethodName(methodId)
+//     }));
+
 export const getPaymentMethods = async () => {
-    const response = await api.get('/payments/methods');
-    return response.data.map(methodId => ({
-        id: methodId,
-        name: formatMethodName(methodId)
-    }));
+    try {
+        const methods = await api.get('/payments/methods');
+        return methods.map(methodId => ({
+            id: methodId,
+            name: formatMethodName(methodId)
+        }));
+    } catch (error) {
+        console.error('Failed to fetch payment methods:', error);
+        return [];
+    }
 };
 
 
