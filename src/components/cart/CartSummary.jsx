@@ -4,11 +4,8 @@ import Button from '../common/Button';
 
 const CartSummary = ({ cart, onClearCart }) => {
     const navigate = useNavigate();
-
     if (!cart) return null;
-
     const { totalAmount, totalItems } = cart;
-
     const handleCheckout = () => {
         if (totalItems === 0) {
             return;

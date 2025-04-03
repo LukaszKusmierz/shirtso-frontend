@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/UseAuth';
-import { getOrderDetails } from '../services/OrderService';
-import { processPayment, getPaymentMethods } from '../services/PaymentService';
+import React, {useEffect, useState} from 'react';
+import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
+import {useAuth} from '../hooks/UseAuth';
+import {getOrderDetails} from '../services/OrderService';
+import {getPaymentMethods, processPayment} from '../services/PaymentService';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
@@ -19,14 +19,18 @@ const PaymentPage = () => {
         expiryDate: '',
         cvv: ''
     });
+    const [validationErrors, setValidationErrors] = useState({
+        cardNumber: '',
+        cardHolderName: '',
+        expiryDate: '',
+        cvv: ''
+    });
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-
-    // Get checkout details from location state
     const checkoutDetails = location.state || {};
     const {
         subtotal,
@@ -43,7 +47,6 @@ const PaymentPage = () => {
             navigate('/login', { state: { from: `/checkout/payment/${orderId}` } });
             return;
         }
-
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -68,61 +71,118 @@ const PaymentPage = () => {
 
         fetchData();
     }, [currentUser, orderId, navigate]);
-
     const handlePaymentMethodChange = (e) => {
         setSelectedPaymentMethod(e.target.value);
+        // Clear validation errors when changing payment method
+        setValidationErrors({
+            cardNumber: '',
+            cardHolderName: '',
+            expiryDate: '',
+            cvv: ''
+        });
     };
-
+    const formatCardNumber = (value) => {
+        const digits = value.replace(/\D/g, '');
+        return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    };
+    const formatExpiryDate = (value) => {
+        const digits = value.replace(/\D/g, '');
+        if (digits.length > 2) {
+            return `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
+        }
+        return digits;
+    };
     const handleCardInputChange = (e) => {
         const { name, value } = e.target;
+        let formattedValue = value;
+        let newValidationErrors = { ...validationErrors };
+
+        if (name === 'cardNumber') {
+            formattedValue = formatCardNumber(value);
+            if (formattedValue.replace(/\s/g, '').length > 0 && formattedValue.replace(/\s/g, '').length < 13) {
+                newValidationErrors.cardNumber = 'Card number must be at least 13 digits';
+            } else {
+                newValidationErrors.cardNumber = '';
+            }
+        } else if (name === 'expiryDate') {
+            formattedValue = formatExpiryDate(value);
+            if (formattedValue && !formattedValue.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
+                if (formattedValue.length >= 5) {
+                    newValidationErrors.expiryDate = 'Please enter a valid date (MM/YY)';
+                }
+            } else {
+                newValidationErrors.expiryDate = '';
+            }
+        } else if (name === 'cvv') {
+            if (value && !value.match(/^\d{3,4}$/)) {
+                if (value.length >= 3) {
+                    newValidationErrors.cvv = 'CVV must be 3 or 4 digits';
+                }
+            } else {
+                newValidationErrors.cvv = '';
+            }
+        } else if (name === 'cardHolderName') {
+            if (!value.trim()) {
+                newValidationErrors.cardHolderName = 'Cardholder name is required';
+            } else {
+                newValidationErrors.cardHolderName = '';
+            }
+        }
         setCardDetails((prev) => ({
             ...prev,
-            [name]: value
+            [name]: formattedValue
         }));
+        setValidationErrors(newValidationErrors);
     };
 
     const validateCardDetails = () => {
         if (selectedPaymentMethod !== 'CREDIT_CARD') return true;
-
         const { cardNumber, cardHolderName, expiryDate, cvv } = cardDetails;
 
-        if (!cardNumber.trim() || cardNumber.length < 13) {
-            setError('Please enter a valid card number.');
-            return false;
-        }
+        let isValid = true;
+        const newValidationErrors = {
+            cardNumber: '',
+            cardHolderName: '',
+            expiryDate: '',
+            cvv: ''
+        };
+        const cleanCardNumber = cardNumber.replace(/\s/g, '');
 
+        if (!cleanCardNumber || cleanCardNumber.length < 13) {
+            newValidationErrors.cardNumber = 'Please enter a valid card number';
+            isValid = false;
+        }
         if (!cardHolderName.trim()) {
-            setError('Please enter the cardholder name.');
-            return false;
+            newValidationErrors.cardHolderName = 'Please enter the cardholder name';
+            isValid = false;
         }
-
         if (!expiryDate.trim() || !expiryDate.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
-            setError('Please enter a valid expiry date (MM/YY).');
-            return false;
+            newValidationErrors.expiryDate = 'Please enter a valid expiry date (MM/YY)';
+            isValid = false;
         }
-
         if (!cvv.trim() || !cvv.match(/^\d{3,4}$/)) {
-            setError('Please enter a valid CVV code.');
-            return false;
+            newValidationErrors.cvv = 'Please enter a valid CVV code';
+            isValid = false;
         }
-
-        return true;
+        setValidationErrors(newValidationErrors);
+        return isValid;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateCardDetails()) return;
-
+        if (!validateCardDetails()) {
+            setError('Please correct the errors in the form');
+            return;
+        }
         setSubmitting(true);
         setError(null);
-
         try {
             const paymentData = {
                 orderId: parseInt(orderId),
                 paymentMethod: selectedPaymentMethod,
                 ...(selectedPaymentMethod === 'CREDIT_CARD' && {
-                    cardNumber: cardDetails.cardNumber,
+                    cardNumber: cardDetails.cardNumber.replace(/\s/g, ''),
                     cardHolderName: cardDetails.cardHolderName,
                     expiryDate: cardDetails.expiryDate,
                     cvv: cardDetails.cvv
@@ -130,13 +190,27 @@ const PaymentPage = () => {
             };
 
             const paymentResponse = await processPayment(paymentData);
-            setSuccessMessage('Payment processed successfully!');
+            setSuccessMessage('Payment processed successfully! Redirecting to order details...');
+            setCardDetails({
+                cardNumber: '',
+                cardHolderName: '',
+                expiryDate: '',
+                cvv: ''
+            });
+
             setTimeout(() => {
                 navigate(`/orders/${orderId}`);
             }, 2000);
         } catch (err) {
             console.error('Payment failed:', err);
-            setError('Payment processing failed. Please check your details and try again.');
+
+            if (err.message?.includes('declined')) {
+                setError('Payment was declined. Please check your card details or try another payment method.');
+            } else if (err.message?.includes('network')) {
+                setError('Network error. Please check your connection and try again.');
+            } else {
+                setError('Payment processing failed. Please check your details and try again.');
+            }
             setSubmitting(false);
         }
     };
@@ -151,7 +225,6 @@ const PaymentPage = () => {
         );
     }
 
-    // Calculate display total if not provided
     const displayTotal = total || (order?.totalAmount || 0);
 
     return (
@@ -189,22 +262,26 @@ const PaymentPage = () => {
                                         Select Payment Method
                                     </label>
                                     <div className="space-y-2">
-                                        {paymentMethods.map(method => (
-                                            <div key={method.id} className="flex items-center">
-                                                <input
-                                                    type="radio"
-                                                    id={method.id}
-                                                    name="paymentMethod"
-                                                    value={method.id}
-                                                    checked={selectedPaymentMethod === method.id}
-                                                    onChange={handlePaymentMethodChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                                />
-                                                <label htmlFor={method.id} className="ml-2 block text-sm text-gray-700">
-                                                    {method.name}
-                                                </label>
-                                            </div>
-                                        ))}
+                                        {paymentMethods.length > 0 ? (
+                                            paymentMethods.map(method => (
+                                                <div key={method.id} className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        id={method.id}
+                                                        name="paymentMethod"
+                                                        value={method.id}
+                                                        checked={selectedPaymentMethod === method.id}
+                                                        onChange={handlePaymentMethodChange}
+                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor={method.id} className="ml-2 block text-sm text-gray-700">
+                                                        {method.name}
+                                                    </label>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500">No payment methods available</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -222,10 +299,13 @@ const PaymentPage = () => {
                                                 value={cardDetails.cardNumber}
                                                 onChange={handleCardInputChange}
                                                 placeholder="1234 5678 9012 3456"
-                                                className="w-full p-2 border border-gray-300 rounded"
+                                                className={`w-full p-2 border ${validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'} rounded`}
                                                 required={selectedPaymentMethod === 'CREDIT_CARD'}
                                                 maxLength={19}
                                             />
+                                            {validationErrors.cardNumber && (
+                                                <p className="mt-1 text-xs text-red-500">{validationErrors.cardNumber}</p>
+                                            )}
                                             <p className="mt-1 text-xs text-gray-500">
                                                 For testing, use 4111111111111111 (success) or 4242424242424242 (failure)
                                             </p>
@@ -241,9 +321,12 @@ const PaymentPage = () => {
                                                 value={cardDetails.cardHolderName}
                                                 onChange={handleCardInputChange}
                                                 placeholder="John Doe"
-                                                className="w-full p-2 border border-gray-300 rounded"
+                                                className={`w-full p-2 border ${validationErrors.cardHolderName ? 'border-red-500' : 'border-gray-300'} rounded`}
                                                 required={selectedPaymentMethod === 'CREDIT_CARD'}
                                             />
+                                            {validationErrors.cardHolderName && (
+                                                <p className="mt-1 text-xs text-red-500">{validationErrors.cardHolderName}</p>
+                                            )}
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -257,10 +340,13 @@ const PaymentPage = () => {
                                                     value={cardDetails.expiryDate}
                                                     onChange={handleCardInputChange}
                                                     placeholder="MM/YY"
-                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    className={`w-full p-2 border ${validationErrors.expiryDate ? 'border-red-500' : 'border-gray-300'} rounded`}
                                                     required={selectedPaymentMethod === 'CREDIT_CARD'}
                                                     maxLength={5}
                                                 />
+                                                {validationErrors.expiryDate && (
+                                                    <p className="mt-1 text-xs text-red-500">{validationErrors.expiryDate}</p>
+                                                )}
                                             </div>
 
                                             <div>
@@ -273,22 +359,26 @@ const PaymentPage = () => {
                                                     value={cardDetails.cvv}
                                                     onChange={handleCardInputChange}
                                                     placeholder="123"
-                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    className={`w-full p-2 border ${validationErrors.cvv ? 'border-red-500' : 'border-gray-300'} rounded`}
                                                     required={selectedPaymentMethod === 'CREDIT_CARD'}
                                                     maxLength={4}
                                                 />
+                                                {validationErrors.cvv && (
+                                                    <p className="mt-1 text-xs text-red-500">{validationErrors.cvv}</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
                                 <div className="flex justify-between items-center mt-6">
-                                    <a
-                                        href={`/checkout`}
+                                    <Link
+                                        to="/checkout"
+                                        state={{ ...checkoutDetails, orderId }}
                                         className="text-blue-600 hover:text-blue-800"
                                     >
                                         ← Back to Checkout
-                                    </a>
+                                    </Link>
 
                                     <Button
                                         type="submit"

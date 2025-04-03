@@ -13,9 +13,6 @@ const ProductFilters = ({ onFilterChange }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-
-
-    // Fetch categories on component mount
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -32,13 +29,11 @@ const ProductFilters = ({ onFilterChange }) => {
         fetchCategories();
     }, []);
 
-    // Fetch subcategories when a category is selected
     useEffect(() => {
         if (!selectedCategory) {
             setSubcategories([]);
             return;
         }
-
         const fetchSubcategories = async () => {
             try {
                 const data = await getSubcategoriesByCategory(selectedCategory);
@@ -67,7 +62,6 @@ const ProductFilters = ({ onFilterChange }) => {
         fetchSizes();
     }, [selectedSubcategory]);
 
-    // Update filters when selections change
     useEffect(() => {
         onFilterChange({
             categoryId: selectedCategory || null,
@@ -76,25 +70,20 @@ const ProductFilters = ({ onFilterChange }) => {
             inStock: inStockOnly,
         });
     }, [selectedCategory, selectedSubcategory, selectedSize, inStockOnly, onFilterChange]);
-
     const handleCategoryChange = (e) => {
         const categoryId = e.target.value;
         setSelectedCategory(categoryId);
         setSelectedSubcategory(''); // Reset subcategory when category changes
     };
-
     const handleSubcategoryChange = (e) => {
         setSelectedSubcategory(e.target.value);
     };
-
     const handleSizeChange = (e) => {
         setSelectedSize(e.target.value);
     };
-
     const handleStockChange = (e) => {
         setInStockOnly(e.target.checked);
     };
-
     const resetFilters = () => {
         setSelectedCategory('');
         setSelectedSubcategory('');

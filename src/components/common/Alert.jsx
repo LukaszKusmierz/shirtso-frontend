@@ -15,7 +15,6 @@ const Alert = ({
         return null;
     }
 
-    // Alert variants
     const variants = {
         info: {
             bg: 'bg-blue-50',
@@ -60,7 +59,6 @@ const Alert = ({
     };
 
     const variant = variants[type] || variants.info;
-
     const handleDismiss = () => {
         setDismissed(true);
         if (onDismiss) {

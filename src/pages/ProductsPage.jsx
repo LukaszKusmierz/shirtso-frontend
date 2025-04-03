@@ -31,7 +31,6 @@ const ProductsPage = () => {
         const subcategoryId = searchParams.get('subcategoryId');
         const size = searchParams.get('size');
         const search = searchParams.get('search');
-
         setFilters((prev) => ({
             ...prev,
             categoryId: categoryId || null,
@@ -92,14 +91,12 @@ const ProductsPage = () => {
 
         setFilteredProducts(result);
     }, [products, filters.inStock]);
-
     const handleFilterChange = useCallback((newFilters) => {
         setFilters((prev) => ({
             ...prev,
             ...newFilters,
         }));
     }, []);
-
     const handleSearch = (e) => {
         e.preventDefault();
 

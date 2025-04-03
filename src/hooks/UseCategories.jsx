@@ -22,7 +22,6 @@ export const useCategories = () => {
 
         fetchCategories();
     }, []);
-
     const getSubcategories = async (categoryId) => {
         try {
             return await getSubcategoriesByCategory(categoryId);

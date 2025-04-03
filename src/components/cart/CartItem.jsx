@@ -5,12 +5,10 @@ import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
     const { cartItemId, product, quantity, totalAmount } = item;
     const { productId, productName, price, currency, images } = product;
-
     const hasPrimaryImage = images && images.length > 0;
     const primaryImage = hasPrimaryImage
         ? images.find(img => img.isPrimary) || images[0]
         : null;
-
     const handleQuantityChange = (newQuantity) => {
         if (newQuantity < 1) return;
         onUpdateQuantity(cartItemId, newQuantity);

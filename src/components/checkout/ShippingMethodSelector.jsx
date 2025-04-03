@@ -28,8 +28,8 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
         };
 
         fetchShippingMethods();
-    }, [onShippingMethodSelected]);
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); //intentionally omitted dep(caused infinite loop)
     const handleMethodChange = (e) => {
         const methodId = parseInt(e.target.value);
         setSelectedMethodId(methodId);
@@ -39,7 +39,6 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
             onShippingMethodSelected(selectedMethod);
         }
     };
-
     if (loading) {
         return (
             <div className="flex justify-center py-4">
@@ -47,7 +46,6 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
             </div>
         );
     }
-
     if (error) {
         return (
             <div className="text-red-600 py-2">
@@ -55,7 +53,6 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
             </div>
         );
     }
-
     if (shippingMethods.length === 0) {
         return (
             <div className="text-gray-600 py-2">

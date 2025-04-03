@@ -19,7 +19,6 @@ const CartPage = () => {
             navigate('/login', { state: { from: '/cart' } });
             return;
         }
-
         const fetchCart = async () => {
             setLoading(true);
             try {
@@ -36,7 +35,6 @@ const CartPage = () => {
 
         fetchCart();
     }, [currentUser, navigate]);
-
     const handleUpdateQuantity = async (cartItemId, quantity) => {
         try {
             const updatedCart = await updateCartItem(cartItemId, quantity);
@@ -46,7 +44,6 @@ const CartPage = () => {
             setError('Failed to update item quantity. Please try again.');
         }
     };
-
     const handleRemoveItem = async (cartItemId) => {
         try {
             const updatedCart = await removeCartItem(cartItemId);
@@ -56,7 +53,6 @@ const CartPage = () => {
             setError('Failed to remove item from cart. Please try again.');
         }
     };
-
     const handleClearCart = async () => {
         if (window.confirm('Are you sure you want to clear your cart?')) {
             try {
@@ -69,7 +65,6 @@ const CartPage = () => {
             }
         }
     };
-
     if (loading) {
         return (
             <div className="container mx-auto p-4">

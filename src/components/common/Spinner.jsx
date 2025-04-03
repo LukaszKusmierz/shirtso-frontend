@@ -1,15 +1,12 @@
 import React from 'react';
 
 const Spinner = ({ size = 'md', color = 'blue', className = '' }) => {
-    // Size classes
     const sizeClasses = {
         sm: 'h-4 w-4',
         md: 'h-8 w-8',
         lg: 'h-12 w-12',
         xl: 'h-16 w-16',
     };
-
-    // Color classes
     const colorClasses = {
         blue: 'text-blue-600',
         gray: 'text-gray-600',

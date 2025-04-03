@@ -30,18 +30,15 @@ const ProductImageManagement = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
-
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    // Check if user has admin role
     useEffect(() => {
         if (!currentUser || !currentUser.roles || !currentUser.roles.includes('USER_WRITE')) {
             navigate('/');
         }
     }, [currentUser, navigate]);
 
-    // Fetch product and images data
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -81,24 +78,15 @@ const ProductImageManagement = () => {
         try {
             setLoading(true);
 
-            // Create new image
             const imageData = {
                 imageUrl: newImageUrl.trim(),
                 altText: newImageAlt.trim() || null
             };
-
             const newImage = await createImage(imageData);
-
-            // Update all images list
             setAllImages([...allImages, newImage]);
-
-            // Select the new image
             setSelectedImage(newImage.imageId);
-
-            // Clear form
             setNewImageUrl('');
             setNewImageAlt('');
-
             setSuccessMessage('Image created successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
 
@@ -120,28 +108,19 @@ const ProductImageManagement = () => {
 
         try {
             setLoading(true);
-
-            // Associate image with product
             const imageData = {
                 imageId: parseInt(selectedImage),
                 isPrimary: isPrimary,
                 displayOrder: parseInt(displayOrder) || 0
             };
-
             await associateImageWithProduct(id, imageData);
-
-            // Refresh product images
             const productImagesData = await getProductImages(id);
             setProductImages(productImagesData);
-
-            // Reset form
             setSelectedImage(null);
             setDisplayOrder(0);
             setIsPrimary(false);
-
             setSuccessMessage('Image associated with product successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
-
         } catch (err) {
             setError('Failed to associate image: ' + (err.message || 'Unknown error'));
             console.error(err);
@@ -153,16 +132,11 @@ const ProductImageManagement = () => {
     const handleSetPrimary = async (imageId) => {
         try {
             setLoading(true);
-
             await setPrimaryImage(id, imageId);
-
-            // Refresh product images
             const productImagesData = await getProductImages(id);
             setProductImages(productImagesData);
-
             setSuccessMessage('Primary image updated successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
-
         } catch (err) {
             setError('Failed to update primary image: ' + (err.message || 'Unknown error'));
             console.error(err);
@@ -178,13 +152,9 @@ const ProductImageManagement = () => {
 
         try {
             setLoading(true);
-
             await removeImageFromProduct(id, imageId);
-
-            // Refresh product images
             const productImagesData = await getProductImages(id);
             setProductImages(productImagesData);
-
             setSuccessMessage('Image removed from product successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
 
@@ -195,7 +165,6 @@ const ProductImageManagement = () => {
             setLoading(false);
         }
     };
-
     const handleGoBack = () => {
         navigate('/admin/products');
     };

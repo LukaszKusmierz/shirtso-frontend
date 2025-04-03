@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
 
         initAuth();
     }, []);
-
     const loginUser = async (credentials) => {
         setLoading(true);
         setError(null);
@@ -44,7 +43,6 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         }
     };
-
     const registerUser = async (userData) => {
         setLoading(true);
         setError(null);
@@ -58,12 +56,10 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         }
     };
-
     const logout = () => {
         localStorage.removeItem('token');
         setCurrentUser(null);
     };
-
     const value = {
         currentUser,
         loading,

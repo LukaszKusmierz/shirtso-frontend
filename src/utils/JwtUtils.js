@@ -7,7 +7,6 @@ export const decodeJwtToken = (token) => {
     if (!token) return null;
 
     try {
-        // JWT tokens are in format: header.payload.signature
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(
@@ -32,8 +31,6 @@ export const decodeJwtToken = (token) => {
 export const isTokenExpired = (token) => {
     const payload = decodeJwtToken(token);
     if (!payload || !payload.exp) return true;
-
-    // JWT exp is in seconds, JS Date expects milliseconds
     const expirationTime = payload.exp * 1000;
     return Date.now() >= expirationTime;
 };

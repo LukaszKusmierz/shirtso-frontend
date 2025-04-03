@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/UseAuth';
 import { getCart } from '../services/CartService';
@@ -21,23 +21,19 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-    const [orderCreated, setOrderCreated] = useState(false);
-    const [orderId, setOrderId] = useState(null);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-
-    // Calculate totals
     const subtotal = cart?.totalAmount || 0;
     const shippingCost = selectedShippingMethod?.price || 0;
     const discount = discountAmount || 0;
-    const total = subtotal + shippingCost - discount;
+    const total = Math.round((subtotal + shippingCost - discount) * 100) / 100;
+    const displayTotal = total.toFixed(2);
 
     useEffect(() => {
         if (!currentUser) {
             navigate('/login', { state: { from: '/checkout' } });
             return;
         }
-
         const fetchCart = async () => {
             setLoading(true);
             try {
@@ -59,25 +55,20 @@ const CheckoutPage = () => {
 
         fetchCart();
     }, [currentUser, navigate]);
-
-    const handleAddressSelected = (address) => {
+    const handleAddressSelected = useCallback((address) => {
         setSelectedAddress(address);
-    };
-
-    const handleNewAddressCreated = (address) => {
+    }, []);
+    const handleNewAddressCreated = useCallback((address) => {
         setSelectedAddress(address);
         setShowAddressForm(false);
-    };
-
-    const handleShippingMethodSelected = (method) => {
+    }, []);
+    const handleShippingMethodSelected = useCallback((method) => {
         setSelectedShippingMethod(method);
-    };
-
-    const handlePromoCodeApplied = (promoCode, discount) => {
+    }, []);
+    const handlePromoCodeApplied = useCallback((promoCode, discount) => {
         setAppliedPromoCode(promoCode);
         setDiscountAmount(discount);
-    };
-
+    }, []);
     const validateCheckout = () => {
         if (!selectedAddress) {
             setError('Please select or add a shipping address');
@@ -96,17 +87,11 @@ const CheckoutPage = () => {
         e.preventDefault();
 
         if (!validateCheckout()) return;
-
         setSubmitting(true);
         setError(null);
 
         try {
-            // First create the order from the cart
             const orderResponse = await createOrder(cart.cartId);
-            setOrderId(orderResponse.orderId);
-            setOrderCreated(true);
-
-            // Navigate to payment page with all the necessary information
             navigate(`/checkout/payment/${orderResponse.orderId}`, {
                 state: {
                     subtotal,
@@ -218,7 +203,7 @@ const CheckoutPage = () => {
 
                                 <div className="flex justify-between text-lg font-semibold mb-6">
                                     <span>Total:</span>
-                                    <span>{total} PLN</span>
+                                    <span>{displayTotal} PLN</span>
                                 </div>
 
                                 <Button

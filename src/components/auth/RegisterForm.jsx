@@ -13,7 +13,6 @@ const RegisterForm = () => {
     const [error, setError] = useState(null);
     const { register } = useAuth();
     const navigate = useNavigate();
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUserData((prev) => ({
@@ -21,7 +20,6 @@ const RegisterForm = () => {
             [name]: value,
         }));
     };
-
     const validateForm = () => {
         if (userData.password !== userData.confirmPassword) {
             setError('Passwords do not match');
@@ -45,13 +43,11 @@ const RegisterForm = () => {
         setError(null);
 
         try {
-            // Transform data to match the backend expected format
             const registrationData = {
                 username: userData.username,
                 email: userData.email,
                 password: userData.password,
             };
-
             await register(registrationData);
             navigate('/login', { state: { message: 'Registration successful! Please login.' } });
         } catch (err) {

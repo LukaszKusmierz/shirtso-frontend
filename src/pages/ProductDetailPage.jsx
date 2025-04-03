@@ -31,7 +31,6 @@ const ProductDetailPage = () => {
 
         fetchProduct();
     }, [id]);
-
     const handleGoBack = () => {
         navigate(-1);
     };

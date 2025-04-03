@@ -18,7 +18,6 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductImagePage from './pages/admin/AdminProductImagePage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Protected route component for normal user authentication
 const ProtectedRoute = ({ children }) => {
     const { currentUser, loading } = useAuth();
 
@@ -29,7 +28,6 @@ const ProtectedRoute = ({ children }) => {
     return currentUser ? children : <Navigate to="/login" replace />;
 };
 
-// Protected route specifically for admin users
 const AdminRoute = ({ children }) => {
     const { currentUser, loading } = useAuth();
 
@@ -37,11 +35,9 @@ const AdminRoute = ({ children }) => {
         return <div>Loading...</div>;
     }
 
-    // Check if user is logged in and has admin role
     if (!currentUser) {
         return <Navigate to="/login" replace />;
     }
-
     const isAdmin = currentUser.roles && currentUser.roles.includes('USER_WRITE');
 
     return isAdmin ? children : <Navigate to="/" replace />;
@@ -53,21 +49,16 @@ const App = () => {
             <AuthProvider>
                 <MainLayout>
                     <Routes>
-                        {/* Public routes */}
                         <Route path="/" element={<HomePage />} />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/products" element={<ProductsPage />} />
                         <Route path="/products/:id" element={<ProductDetailPage />} />
-
-                        {/* Protected user routes */}
                         <Route path="/profile" element={
                             <ProtectedRoute>
                                 <UserProfilePage />
                             </ProtectedRoute>
                         } />
-
-                        {/* Cart and Order routes */}
                         <Route path="/cart" element={
                             <ProtectedRoute>
                                 <CartPage />
@@ -93,8 +84,6 @@ const App = () => {
                                 <OrderDetailPage />
                             </ProtectedRoute>
                         } />
-
-                        {/* Protected admin routes */}
                         <Route path="/admin/products" element={
                             <AdminRoute>
                                 <AdminProductsPage />
@@ -105,8 +94,6 @@ const App = () => {
                                 <AdminProductImagePage />
                             </AdminRoute>
                         } />
-
-                        {/* 404 route */}
                         <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                 </MainLayout>

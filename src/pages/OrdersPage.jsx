@@ -17,7 +17,6 @@ const OrdersPage = () => {
             navigate('/login', { state: { from: '/orders' } });
             return;
         }
-
         const fetchOrders = async () => {
             setLoading(true);
             try {
@@ -34,7 +33,6 @@ const OrdersPage = () => {
 
         fetchOrders();
     }, [currentUser, navigate]);
-
     const getStatusBadgeClass = (status) => {
         switch (status) {
             case 'NEW':

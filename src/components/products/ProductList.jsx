@@ -3,7 +3,6 @@ import ProductCard from './ProductCard';
 
 const ProductList = ({ products, loading, error }) => {
     const [sortBy, setSortBy] = useState('name');
-
     const sortProducts = () => {
         if (!products || products.length === 0) return [];
 

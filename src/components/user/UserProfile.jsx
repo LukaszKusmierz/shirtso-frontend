@@ -15,16 +15,11 @@ const UserProfile = () => {
             </div>
         );
     }
-
-    // Extract user information
     const { userId, userName, email, roles = [] } = currentUser;
-
-    // Format roles for display
     const formatRoles = (roles) => {
         if (!roles || roles.length === 0) return 'No roles assigned';
 
         return roles.map(role => {
-            // Convert backend role names to user-friendly display
             switch(role) {
                 case 'USER_READ':
                     return 'Customer';
@@ -35,8 +30,6 @@ const UserProfile = () => {
             }
         }).join(', ');
     };
-
-    // Check if user has admin privileges
     const isAdmin = roles.includes('USER_WRITE');
 
     return (
@@ -104,7 +97,6 @@ const UserProfile = () => {
                 <h3 className="text-lg font-medium mb-4">Account Actions</h3>
 
                 <div className="space-y-3">
-                    {/* These buttons would be connected to actual account management functionality */}
                     <Button
                         variant="outline"
                         fullWidth

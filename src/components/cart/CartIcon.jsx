@@ -6,32 +6,46 @@ import CartEventService from "../../services/CartEventService";
 
 const CartIcon = () => {
     const [cartItems, setCartItems] = useState(0);
+    const [hasInteracted, setHasInteracted] = useState(
+        localStorage.getItem('hasCartInteraction') === 'true'
+    );
     const { currentUser } = useAuth();
-
     const fetchCartItems = useCallback(async () => {
         if (!currentUser) {
             setCartItems(0);
+            return;
+        }
+        if (!hasInteracted && !localStorage.getItem('hasCartInteraction')) {
             return;
         }
 
         try {
             const cart = await getCart();
             setCartItems(cart.totalItems || 0);
+            if (cart.totalItems > 0 && !hasInteracted) {
+                localStorage.setItem('hasCartInteraction', 'true');
+                setHasInteracted(true);
+            }
         } catch (err) {
             console.error('Failed to fetch cart:', err);
         }
-    }, [currentUser]);
+    }, [currentUser, hasInteracted]);
 
     useEffect(() => {
-        fetchCartItems();
-        const unsubscribe = CartEventService.subscribe(fetchCartItems);
-        const intervalId = setInterval(fetchCartItems, 60000); // Check every minute
+        if (hasInteracted) {
+            fetchCartItems();
+        }
+
+        const unsubscribe = CartEventService.subscribe(() => {
+            localStorage.setItem('hasCartInteraction', 'true');
+            setHasInteracted(true);
+            fetchCartItems();
+        });
 
         return () => {
-            clearInterval(intervalId);
             unsubscribe();
         };
-    }, [fetchCartItems]);
+    }, [fetchCartItems, hasInteracted]);
 
     return (
         <Link to="/cart" className="relative inline-flex items-center p-2">

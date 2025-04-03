@@ -11,7 +11,6 @@ const LoginForm = () => {
     const [error, setError] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials((prev) => ({
@@ -19,7 +18,6 @@ const LoginForm = () => {
             [name]: value,
         }));
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);

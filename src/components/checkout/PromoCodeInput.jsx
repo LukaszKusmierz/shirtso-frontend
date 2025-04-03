@@ -16,11 +16,9 @@ const PromoCodeInput = ({ orderValue, onPromoCodeApplied }) => {
             setError('Please enter a promo code');
             return;
         }
-
         setLoading(true);
         setError(null);
         setSuccess(null);
-
         try {
             const result = await validatePromoCode(promoCode, orderValue);
 

@@ -12,17 +12,13 @@ const Button = ({
                     className = '',
                     ...rest
                 }) => {
-    // Base classes
-    const baseClasses = 'font-medium rounded focus:outline-none transition-colors';
 
-    // Size classes
+    const baseClasses = 'font-medium rounded focus:outline-none transition-colors';
     const sizeClasses = {
         sm: 'px-3 py-1.5 text-sm',
         md: 'px-4 py-2',
         lg: 'px-6 py-3 text-lg',
     };
-
-    // Variant classes
     const variantClasses = {
         primary: 'bg-blue-600 hover:bg-blue-700 text-white',
         secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
@@ -31,16 +27,11 @@ const Button = ({
         warning: 'bg-yellow-500 hover:bg-yellow-600 text-white',
         outline: 'bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50',
     };
-
-    // State classes
     const stateClasses = {
         disabled: 'opacity-50 cursor-not-allowed',
         loading: 'relative !text-transparent',
     };
-
     const widthClass = fullWidth ? 'w-full' : '';
-
-    // Combine classes
     const buttonClasses = `
     ${baseClasses}
     ${sizeClasses[size] || sizeClasses.md}

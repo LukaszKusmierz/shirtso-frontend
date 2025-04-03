@@ -7,15 +7,11 @@ const ProductsTable = ({ products }) => {
     const [sortConfig, setSortConfig] = useState({ key: 'productName', direction: 'ascending' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-
-    // Filter products based on search term
     const filteredProducts = products.filter(product =>
         product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.supplier.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    // Sort products
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
             return sortConfig.direction === 'ascending' ? -1 : 1;
@@ -25,14 +21,10 @@ const ProductsTable = ({ products }) => {
         }
         return 0;
     });
-
-    // Calculate pagination
     const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
-
-    // Handle sorting
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -40,8 +32,6 @@ const ProductsTable = ({ products }) => {
         }
         setSortConfig({ key, direction });
     };
-
-    // Get sort indicator icon
     const getSortIndicator = (key) => {
         if (sortConfig.key !== key) return null;
         return sortConfig.direction === 'ascending' ? '↑' : '↓';
@@ -170,7 +160,6 @@ const ProductsTable = ({ products }) => {
                 </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
                 <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
                     <div className="flex-1 flex justify-between sm:hidden">
@@ -215,7 +204,6 @@ const ProductsTable = ({ products }) => {
                                     Previous
                                 </button>
 
-                                {/* Page buttons */}
                                 {[...Array(totalPages).keys()].map(number => (
                                     <button
                                         key={number + 1}

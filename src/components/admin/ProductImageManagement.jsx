@@ -19,18 +19,15 @@ const ProductImageManagement = () => {
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [activeTab, setActiveTab] = useState('products'); // 'products' or 'new'
-
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    // Check if user has admin role
     useEffect(() => {
         if (!currentUser || !currentUser.roles || !currentUser.roles.includes('USER_WRITE')) {
             navigate('/');
         }
     }, [currentUser, navigate]);
 
-    // Fetch products, categories, and sizes on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -40,7 +37,6 @@ const ProductImageManagement = () => {
                     getAllCategories(),
                     getSizes()
                 ]);
-
                 setProducts(productsData);
                 setCategories(categoriesData);
                 setSizes(sizesData);
@@ -56,7 +52,6 @@ const ProductImageManagement = () => {
         fetchData();
     }, []);
 
-    // Handle category change to load subcategories
     const handleCategoryChange = async (categoryId) => {
         if (!categoryId) {
             setSubcategories([]);
@@ -72,19 +67,13 @@ const ProductImageManagement = () => {
         }
     };
 
-    // Handle product creation
     const handleCreateProduct = async (productData) => {
         try {
             setLoading(true);
             const newProduct = await addNewProduct(productData);
-
-            // Add new product to the list
             setProducts([...products, newProduct]);
-
             setSuccessMessage('Product created successfully!');
             setActiveTab('products'); // Switch back to products list
-
-            // Clear success message after 3 seconds
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 3000);

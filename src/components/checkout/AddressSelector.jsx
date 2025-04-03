@@ -16,7 +16,6 @@ const AddressSelector = ({ onAddressSelected, onNewAddressClick }) => {
                 const addressList = await getUserAddresses();
                 setAddresses(addressList);
 
-                // Try to get default address
                 try {
                     const defaultAddress = await getDefaultAddress();
                     if (defaultAddress) {
@@ -27,7 +26,6 @@ const AddressSelector = ({ onAddressSelected, onNewAddressClick }) => {
                         onAddressSelected(addressList[0]);
                     }
                 } catch (err) {
-                    // If no default address, use the first one
                     if (addressList.length > 0) {
                         setSelectedAddressId(addressList[0].addressId);
                         onAddressSelected(addressList[0]);
@@ -42,7 +40,8 @@ const AddressSelector = ({ onAddressSelected, onNewAddressClick }) => {
         };
 
         fetchAddresses();
-    }, [onAddressSelected]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); //intentionally omitted dep(caused infinite loop)
 
     const handleAddressChange = (e) => {
         const addressId = parseInt(e.target.value);

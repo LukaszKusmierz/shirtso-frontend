@@ -37,7 +37,6 @@ const ProductDetails = ({ product }) => {
             setSelectedImageIndex(0);
         }
     }, [product, primaryImageIndex, sortedImages.length]);
-
     const handleAddToCart = async () => {
         if (!currentUser) {
             navigate('/login', { state: { from: `/products/${product.productId}` } });
@@ -48,15 +47,12 @@ const ProductDetails = ({ product }) => {
             setError('Please select a valid quantity.');
             return;
         }
-
         setAddingToCart(true);
         setError(null);
 
         try {
             await addToCart(product.productId, quantity);
             setSuccessMessage(`Added ${quantity} ${product.productName} to cart!`);
-
-            // Clear success message after 3 seconds
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 3000);
@@ -121,7 +117,6 @@ const ProductDetails = ({ product }) => {
 
             <div className="md:flex">
                 <div className="md:w-1/2">
-                    {/* Main Image Display */}
                     <div className="h-64 md:h-96 bg-gray-200 flex items-center justify-center overflow-hidden">
                         {hasImages && sortedImages.length > 0 && imagesLoaded[selectedImageIndex] !== false ? (
                             <img
@@ -138,8 +133,6 @@ const ProductDetails = ({ product }) => {
                             />
                         )}
                     </div>
-
-                    {/* Thumbnail Images */}
                     {hasImages && sortedImages.length > 1 && (
                         <div className="flex overflow-x-auto p-2 space-x-2">
                             {sortedImages.map((image, index) => (
@@ -163,7 +156,6 @@ const ProductDetails = ({ product }) => {
                         </div>
                     )}
                 </div>
-
                 <div className="md:w-1/2 p-6">
                     <h1 className="text-2xl font-bold mb-2">{productName}</h1>
 

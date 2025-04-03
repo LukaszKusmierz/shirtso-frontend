@@ -81,7 +81,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
         setIsSubmitting(true);
 
         try {
-            // Format data for API
             const productData = {
                 ...formData,
                 price: parseFloat(formData.price)
@@ -90,7 +89,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
             const success = await onSubmit(productData);
 
             if (success) {
-                // Reset form
                 setFormData({
                     productName: '',
                     description: '',
@@ -115,7 +113,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Product Name */}
                     <div>
                         <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-1">
                             Product Name *
@@ -133,7 +130,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Supplier */}
                     <div>
                         <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 mb-1">
                             Supplier *
@@ -151,7 +147,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Price */}
                     <div>
                         <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                             Price *
@@ -171,7 +166,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Currency */}
                     <div>
                         <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
                             Currency *
@@ -192,7 +186,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Stock */}
                     <div>
                         <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
                             Stock *
@@ -211,7 +204,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Size */}
                     <div>
                         <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
                             Size *
@@ -233,7 +225,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Category */}
                     <div>
                         <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-1">
                             Category *
@@ -257,7 +248,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Subcategory */}
                     <div>
                         <label htmlFor="subcategoryId" className="block text-sm font-medium text-gray-700 mb-1">
                             Subcategory *
@@ -282,7 +272,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         )}
                     </div>
 
-                    {/* Image ID */}
                     <div>
                         <label htmlFor="imageId" className="block text-sm font-medium text-gray-700 mb-1">
                             Image ID
@@ -302,7 +291,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                     </div>
                 </div>
 
-                {/* Description */}
                 <div className="mt-6">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                         Description *

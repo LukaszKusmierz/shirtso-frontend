@@ -15,7 +15,6 @@ const AddressForm = ({ onAddressCreated, onCancel }) => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
@@ -23,7 +22,6 @@ const AddressForm = ({ onAddressCreated, onCancel }) => {
             [name]: type === 'checkbox' ? checked : value
         }));
     };
-
     const validateForm = () => {
         const requiredFields = ['fullName', 'streetAddress', 'city', 'postalCode', 'country', 'phone'];
         for (const field of requiredFields) {
@@ -32,8 +30,6 @@ const AddressForm = ({ onAddressCreated, onCancel }) => {
                 return false;
             }
         }
-
-        // Basic phone validation
         const phoneRegex = /^\+(?:[0-9] ?){6,14}[0-9]$/;
         if (!phoneRegex.test(formData.phone)) {
             setError('Please enter a valid phone number');
@@ -42,7 +38,6 @@ const AddressForm = ({ onAddressCreated, onCancel }) => {
 
         return true;
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 

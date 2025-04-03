@@ -21,7 +21,6 @@ const OrderDetailPage = () => {
             navigate('/login', { state: { from: `/orders/${orderId}` } });
             return;
         }
-
         const fetchOrderDetails = async () => {
             setLoading(true);
             try {
@@ -38,13 +37,11 @@ const OrderDetailPage = () => {
 
         fetchOrderDetails();
     }, [currentUser, orderId, navigate]);
-
     const handleCancelOrder = async () => {
         if (!window.confirm('Are you sure you want to cancel this order?')) {
             return;
         }
         setCancelling(true);
-
         try {
             await cancelOrder(orderId);
             const updatedOrder = await getOrderDetails(orderId);
@@ -57,13 +54,11 @@ const OrderDetailPage = () => {
             setCancelling(false);
         }
     };
-
     const formatDate = (dateTimeString) => {
         if (!dateTimeString) return '';
         const date = new Date(dateTimeString);
         return date.toLocaleString();
     };
-
     const getStatusBadgeClass = (status) => {
         switch (status) {
             case 'NEW':
@@ -231,7 +226,7 @@ const OrderDetailPage = () => {
                                 </div>
                             )}
 
-                            {order.orderStatus === 'SHIPPED' || order.orderStatus === 'DELIVERED' && (
+                            {(order.orderStatus === 'SHIPPED' || order.orderStatus === 'DELIVERED') && (
                                 <div className="relative flex items-start">
                                     <div className="h-7 w-7 rounded-full border-2 border-purple-500 bg-white flex items-center justify-center flex-shrink-0 z-10">
                                         <div className="h-3 w-3 rounded-full bg-purple-500"></div>

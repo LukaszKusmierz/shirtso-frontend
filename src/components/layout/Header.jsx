@@ -8,14 +8,11 @@ const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const navigate = useNavigate();
-
     const handleLogout = () => {
         logout();
         navigate('/login');
         setIsUserMenuOpen(false);
     };
-
-    // Check if user has admin role
     const isAdmin = currentUser && currentUser.roles && currentUser.roles.includes('USER_WRITE');
 
     return (
