@@ -91,7 +91,12 @@ const CheckoutPage = () => {
         setError(null);
 
         try {
-            const orderResponse = await createOrder(cart.cartId);
+            const orderResponse = await createOrder(
+                cart.cartId,
+                selectedShippingMethod?.shippingMethodId,
+                selectedAddress?.addressId,
+                appliedPromoCode?.code
+                );
             navigate(`/checkout/payment/${orderResponse.orderId}`, {
                 state: {
                     subtotal,

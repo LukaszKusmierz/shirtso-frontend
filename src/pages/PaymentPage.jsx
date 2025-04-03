@@ -6,6 +6,7 @@ import {getPaymentMethods, processPayment} from '../services/PaymentService';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
+import CartEventService from "../services/CartEventService";
 
 const PaymentPage = () => {
     const { orderId } = useParams();
@@ -37,9 +38,7 @@ const PaymentPage = () => {
         shippingCost = 0,
         discount = 0,
         total,
-        address,
-        shippingMethod,
-        promoCode
+        address
     } = checkoutDetails;
 
     useEffect(() => {
@@ -189,7 +188,8 @@ const PaymentPage = () => {
                 })
             };
 
-            const paymentResponse = await processPayment(paymentData);
+            await processPayment(paymentData);
+            CartEventService.emitCartChange();
             setSuccessMessage('Payment processed successfully! Redirecting to order details...');
             setCardDetails({
                 cardNumber: '',

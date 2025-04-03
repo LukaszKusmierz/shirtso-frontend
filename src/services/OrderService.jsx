@@ -1,9 +1,13 @@
 import api from './Api.jsx';
 
-export const createOrder = (cartId) => {
-    return api.post('/orders', {
+export const createOrder = (cartId, shippingMethodId, addressId, promoCode) => {
+    const orderData = {
         cartId
-    });
+    };
+    if (shippingMethodId) orderData.shippingMethodId = shippingMethodId;
+    if (addressId) orderData.addressId = addressId;
+    if (promoCode) orderData.promoCode = promoCode;
+    return api.post('/orders', orderData);
 };
 
 export const getUserOrders = () => {
