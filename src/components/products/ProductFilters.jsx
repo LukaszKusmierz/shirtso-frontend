@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {getAllCategories, getSubcategoriesByCategory} from '../../services/CategoryService';
 import {getSizes} from "../../services/ProductService";
 
-const ProductFilters = ({ onFilterChange }) => {
+const ProductFilters = ({ currentFilters, onFilterChange }) => {
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [sizes, setSizes] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedSubcategory, setSelectedSubcategory] = useState('');
-    const [selectedSize, setSelectedSize] = useState('');
-    const [inStockOnly, setInStockOnly] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -30,13 +26,13 @@ const ProductFilters = ({ onFilterChange }) => {
     }, []);
 
     useEffect(() => {
-        if (!selectedCategory) {
+        if (!currentFilters.categoryId) {
             setSubcategories([]);
             return;
         }
         const fetchSubcategories = async () => {
             try {
-                const data = await getSubcategoriesByCategory(selectedCategory);
+                const data = await getSubcategoriesByCategory(currentFilters.categoryId);
                 setSubcategories(data);
             } catch (err) {
                 console.error('Failed to load subcategories:', err);
@@ -44,7 +40,7 @@ const ProductFilters = ({ onFilterChange }) => {
         };
 
         fetchSubcategories();
-    }, [selectedCategory]);
+    }, [currentFilters.categoryId]);
 
     useEffect(() => {
         const fetchSizes = async () => {
@@ -54,41 +50,54 @@ const ProductFilters = ({ onFilterChange }) => {
             } catch (err) {
                 setError('Failed to load sizes');
                 console.error(err);
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchSizes();
-    }, [selectedSubcategory]);
+    }, []);
 
-    useEffect(() => {
-        onFilterChange({
-            categoryId: selectedCategory || null,
-            subcategoryId: selectedSubcategory || null,
-            size: selectedSize || null,
-            inStock: inStockOnly,
-        });
-    }, [selectedCategory, selectedSubcategory, selectedSize, inStockOnly, onFilterChange]);
     const handleCategoryChange = (e) => {
         const categoryId = e.target.value;
-        setSelectedCategory(categoryId);
-        setSelectedSubcategory(''); // Reset subcategory when category changes
+        onFilterChange({
+            categoryId: categoryId || null,
+            subcategoryId: null, // Reset subcategory when category changes
+            size: currentFilters.size,
+            inStock: currentFilters.inStock,
+            search: currentFilters.search,
+        });
     };
+
     const handleSubcategoryChange = (e) => {
-        setSelectedSubcategory(e.target.value);
+        const subcategoryId = e.target.value;
+        onFilterChange({
+            ...currentFilters,
+            subcategoryId: subcategoryId || null,
+        });
     };
+
     const handleSizeChange = (e) => {
-        setSelectedSize(e.target.value);
+        const size = e.target.value;
+        onFilterChange({
+            ...currentFilters,
+            size: size || null,
+        });
     };
+
     const handleStockChange = (e) => {
-        setInStockOnly(e.target.checked);
+        onFilterChange({
+            ...currentFilters,
+            inStock: e.target.checked,
+        });
     };
+
     const resetFilters = () => {
-        setSelectedCategory('');
-        setSelectedSubcategory('');
-        setSelectedSize('');
-        setInStockOnly(false);
+        onFilterChange({
+            categoryId: null,
+            subcategoryId: null,
+            size: null,
+            inStock: false,
+            search: '',
+        });
     };
 
     if (loading) {
@@ -108,7 +117,7 @@ const ProductFilters = ({ onFilterChange }) => {
                     <label className="block text-gray-700 mb-2">Category</label>
                     <select
                         className="w-full p-2 border border-gray-300 rounded"
-                        value={selectedCategory}
+                        value={currentFilters.categoryId || ''}
                         onChange={handleCategoryChange}
                     >
                         <option value="">All Categories</option>
@@ -125,7 +134,7 @@ const ProductFilters = ({ onFilterChange }) => {
                         <label className="block text-gray-700 mb-2">Subcategory</label>
                         <select
                             className="w-full p-2 border border-gray-300 rounded"
-                            value={selectedSubcategory}
+                            value={currentFilters.subcategoryId || ''}
                             onChange={handleSubcategoryChange}
                         >
                             <option value="">All Subcategories</option>
@@ -142,7 +151,7 @@ const ProductFilters = ({ onFilterChange }) => {
                     <label className="block text-gray-700 mb-2">Size</label>
                     <select
                         className="w-full p-2 border border-gray-300 rounded"
-                        value={selectedSize}
+                        value={currentFilters.size || ''}
                         onChange={handleSizeChange}
                     >
                         <option value="">All Sizes</option>
@@ -158,7 +167,7 @@ const ProductFilters = ({ onFilterChange }) => {
                     <input
                         type="checkbox"
                         id="inStockOnly"
-                        checked={inStockOnly}
+                        checked={currentFilters.inStock}
                         onChange={handleStockChange}
                         className="mr-2"
                     />

@@ -67,35 +67,35 @@ export const getProductWithImages = async (productId) => {
     }
 }
 
-export const getProductsWithImages = async (productsFunction, ...args) => {
-    try {
-        const products = await productsFunction(...args);
-        const productsWithImages = await Promise.all(
-            products.map(async (product) => {
-                try {
-                    const images = await getProductImages(product.productId);
-                    return {
-                        ...product,
-                        images: images,
-                        imageMappings: images
-                    };
-                } catch (error) {
-                    console.warn(`Failed to fetch images for product ${product.productId}:`, error);
-                    return {
-                        ...product,
-                        images: [],
-                        imageMappings: []
-                    };
-                }
-            })
-        );
-
-        return productsWithImages;
-    } catch (error) {
-        console.error('Failed to fetch products with images:', error);
-        throw error;
-    }
-}
+// export const getProductsWithImages = async (productsFunction, ...args) => {
+//     try {
+//         const products = await productsFunction(...args);
+//         const productsWithImages = await Promise.all(
+//             products.map(async (product) => {
+//                 try {
+//                     const images = await getProductImages(product.productId);
+//                     return {
+//                         ...product,
+//                         images: images,
+//                         imageMappings: images
+//                     };
+//                 } catch (error) {
+//                     console.warn(`Failed to fetch images for product ${product.productId}:`, error);
+//                     return {
+//                         ...product,
+//                         images: [],
+//                         imageMappings: []
+//                     };
+//                 }
+//             })
+//         );
+//
+//         return productsWithImages;
+//     } catch (error) {
+//         console.error('Failed to fetch products with images:', error);
+//         throw error;
+//     }
+// }
 
 export const addNewProduct = (productData) => {
     const transformedData = {

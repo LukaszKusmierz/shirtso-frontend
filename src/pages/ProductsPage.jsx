@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import { useLocation } from 'react-router-dom';
 import ProductList from '../components/products/ProductList';
 import ProductFilters from '../components/products/ProductFilters';
@@ -8,7 +8,7 @@ import {
     getProductsInStock,
     getProductsByName,
     getProductsBySizeAndSubcategory,
-    getProductsBySize, getProductsWithImages, getProductsByCategoryId
+    getProductsBySize, getProductsByCategoryId
 } from '../services/ProductService';
 
 const ProductsPage = () => {
@@ -23,7 +23,9 @@ const ProductsPage = () => {
         inStock: false,
         search: '',
     });
+    const [filtersInitialized, setFiltersInitialized] = useState(false);
     const location = useLocation();
+    const fetchingRef = useRef(false);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -31,17 +33,25 @@ const ProductsPage = () => {
         const subcategoryId = searchParams.get('subcategoryId');
         const size = searchParams.get('size');
         const search = searchParams.get('search');
+
+        console.log('URL params - categoryId:', categoryId, 'subcategoryId:', subcategoryId);
+
         setFilters((prev) => ({
-            ...prev,
             categoryId: categoryId || null,
             subcategoryId: subcategoryId || null,
             size: size || null,
             search: search || '',
+            inStock: false,
         }));
+        setFiltersInitialized(true);
     }, [location.search]);
 
     useEffect(() => {
+        if (!filtersInitialized) return;
+        if (fetchingRef.current) return;
+
         const fetchProducts = async () => {
+            fetchingRef.current = true;
             setLoading(true);
             setError(null);
 
@@ -52,35 +62,44 @@ const ProductsPage = () => {
                 if (filters.search) {
                     productFunction = getProductsByName;
                     args = [filters.search];
+                    console.log('Using getProductsByName with:', filters.search);
                 } else if (filters.size && filters.subcategoryId) {
                     productFunction = getProductsBySizeAndSubcategory;
                     args = [filters.size, filters.subcategoryId];
+                    console.log('Using getProductsBySizeAndSubcategory with:', filters.size, filters.subcategoryId);
                 } else if (filters.subcategoryId) {
                     productFunction = getProductsBySubcategory;
                     args = [filters.subcategoryId];
+                    console.log('Using getProductsBySubcategory with:', filters.subcategoryId);
                 } else if (filters.categoryId) {
                     productFunction = getProductsByCategoryId;
                     args = [filters.categoryId];
+                    console.log('Using getProductsByCategoryId with:', filters.categoryId);
                 } else if (filters.size) {
                     productFunction = getProductsBySize;
                     args = [filters.size];
+                    console.log('Using getProductsBySize with:', filters.size);
                 } else if (filters.inStock) {
                     productFunction = getProductsInStock;
+                    console.log('Using getProductsInStock');
                 } else {
                     productFunction = getAllProducts;
+                    console.log('Using getAllProducts');
                 }
-                const data = await getProductsWithImages(productFunction, ...args);
+                const data = await productFunction(...args);
+                console.log('Fetched products count:', data.length);
                 setProducts(data);
             } catch (err) {
                 setError('Failed to load products');
-                console.error(err);
+                console.error('Failed to fetch products:', err);
             } finally {
                 setLoading(false);
+                fetchingRef.current = false;
             }
         };
 
         fetchProducts();
-    }, [filters.subcategoryId, filters.size, filters.inStock, filters.search, filters.categoryId]);
+    }, [filtersInitialized, filters.subcategoryId, filters.size, filters.inStock, filters.search, filters.categoryId]);
 
     useEffect(() => {
         let result = [...products];
@@ -91,18 +110,21 @@ const ProductsPage = () => {
 
         setFilteredProducts(result);
     }, [products, filters.inStock]);
+
     const handleFilterChange = useCallback((newFilters) => {
         setFilters((prev) => ({
             ...prev,
             ...newFilters,
         }));
     }, []);
+
     const handleSearch = (e) => {
         e.preventDefault();
+        const search = e.target.search.value;
 
         setFilters((prev) => ({
             ...prev,
-            search: e.target.search.value,
+            search: search,
         }));
     };
 
@@ -130,7 +152,12 @@ const ProductsPage = () => {
 
             <div className="flex flex-col md:flex-row gap-6">
                 <div className="md:w-1/4">
-                    <ProductFilters onFilterChange={handleFilterChange} />
+                    {filtersInitialized && (
+                        <ProductFilters
+                            currentFilters={filters}
+                            onFilterChange={handleFilterChange}
+                        />
+                    )}
                 </div>
 
                 <div className="md:w-3/4">
