@@ -16,6 +16,10 @@ export const getProductsBySizeAndSubcategory = (size, subcategoryId) => {
     return api.get(`/products?size=${size}&subcategoryId=${subcategoryId}`);
 };
 
+export const getProductsBySizeAndCategory = (size, categoryId) => {
+    return api.get(`/products?size=${size}&categoryId=${categoryId}`);
+}
+
 export const getProductsInStock = () => {
     return api.get('/products/in-stock');
 };

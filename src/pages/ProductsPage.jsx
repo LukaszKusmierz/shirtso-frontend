@@ -8,7 +8,9 @@ import {
     getProductsInStock,
     getProductsByName,
     getProductsBySizeAndSubcategory,
-    getProductsBySize, getProductsByCategoryId
+    getProductsBySize,
+    getProductsByCategoryId,
+    getProductsBySizeAndCategory
 } from '../services/ProductService';
 
 const ProductsPage = () => {
@@ -67,6 +69,9 @@ const ProductsPage = () => {
                     productFunction = getProductsBySizeAndSubcategory;
                     args = [filters.size, filters.subcategoryId];
                     console.log('Using getProductsBySizeAndSubcategory with:', filters.size, filters.subcategoryId);
+                } else if (filters.size && filters.categoryId) {
+                    productFunction = getProductsBySizeAndCategory;
+                    args = [filters.size, filters.categoryId];
                 } else if (filters.subcategoryId) {
                     productFunction = getProductsBySubcategory;
                     args = [filters.subcategoryId];
