@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children }) => {
         return <div>Loading...</div>;
     }
 
-    return currentUser ? children : <Navigate to="/login" replace />;
+    return currentUser ? children : <Navigate to="/" replace />;
 };
 
 const AdminRoute = ({ children }) => {

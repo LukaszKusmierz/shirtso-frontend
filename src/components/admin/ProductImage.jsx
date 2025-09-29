@@ -11,7 +11,7 @@ import {
     associateImageWithProduct,
     setPrimaryImage,
     removeImageFromProduct
-} from '../../services/imageService';
+} from '../../services/ImageService';
 import Spinner from '../common/Spinner';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
@@ -51,7 +51,6 @@ const ProductImageManagement = () => {
                 setProduct(productData);
                 setAllImages(imagesData);
 
-                // Refresh product images
                 const productImagesData = await getProductImages(id);
                 setProductImages(productImagesData);
 

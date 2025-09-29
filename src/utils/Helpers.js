@@ -18,6 +18,9 @@ export const getImageUrl = (imagePath) => {
     if (!imagePath) return getPlaceholderUrl();
     const baseUrl = process.env.REACT_APP_STATIC_URL || '';
     let fullUrl;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+    }
     if (imagePath.startsWith('/')) {
         fullUrl = `${baseUrl}${imagePath}`;
     } else {
