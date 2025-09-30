@@ -9,7 +9,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
         description: '',
         price: '',
         currency: 'PLN',
-        imageId: 0,
         subcategoryId: '',
         supplier: '',
         stock: 0,
@@ -41,7 +40,7 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
         } else {
             setFormData(prev => ({
                 ...prev,
-                [name]: name === 'price' || name === 'stock' || name === 'imageId' || name === 'subcategoryId'
+                [name]: name === 'price' || name === 'stock' || name === 'subcategoryId'
                     ? value === '' ? '' : Number(value)
                     : value
             }));
@@ -69,7 +68,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                     description: '',
                     price: '',
                     currency: 'PLN',
-                    imageId: 0,
                     subcategoryId: '',
                     supplier: '',
                     stock: 0,
@@ -245,24 +243,6 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                         {errors.subcategoryId && (
                             <p className="mt-1 text-sm text-red-600">{errors.subcategoryId}</p>
                         )}
-                    </div>
-
-                    <div>
-                        <label htmlFor="imageId" className="block text-sm font-medium text-gray-700 mb-1">
-                            Image ID
-                        </label>
-                        <input
-                            type="number"
-                            id="imageId"
-                            name="imageId"
-                            value={formData.imageId}
-                            onChange={handleChange}
-                            min="0"
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                            Optional: Enter an existing image ID or leave at 0 to add images later
-                        </p>
                     </div>
                 </div>
 

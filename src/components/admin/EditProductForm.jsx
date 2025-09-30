@@ -9,7 +9,6 @@ const EditProductForm = ({ product, categories, subcategories, sizes, onCategory
         description: '',
         price: '',
         currency: 'PLN',
-        imageId: 0,
         subcategoryId: '',
         supplier: '',
         stock: 0,
@@ -27,7 +26,6 @@ const EditProductForm = ({ product, categories, subcategories, sizes, onCategory
                 description: product.description || '',
                 price: product.price || '',
                 currency: product.currency || 'PLN',
-                imageId: product.imageId || 0,
                 subcategoryId: product.subcategoryId || '',
                 supplier: product.supplier || '',
                 stock: product.stock || 0,
@@ -66,7 +64,7 @@ const EditProductForm = ({ product, categories, subcategories, sizes, onCategory
         } else {
             setFormData(prev => ({
                 ...prev,
-                [name]: name === 'price' || name === 'stock' || name === 'imageId' || name === 'subcategoryId'
+                [name]: name === 'price' || name === 'stock' || name === 'subcategoryId'
                     ? value === '' ? '' : Number(value)
                     : value
             }));
@@ -266,23 +264,6 @@ const EditProductForm = ({ product, categories, subcategories, sizes, onCategory
                         )}
                     </div>
 
-                    <div>
-                        <label htmlFor="imageId" className="block text-sm font-medium text-gray-700 mb-1">
-                            Image ID
-                        </label>
-                        <input
-                            type="number"
-                            id="imageId"
-                            name="imageId"
-                            value={formData.imageId}
-                            onChange={handleChange}
-                            min="0"
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                            Optional: Enter an existing image ID or manage images separately
-                        </p>
-                    </div>
                 </div>
 
                 <div className="mt-6">
