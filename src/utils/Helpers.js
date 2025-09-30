@@ -58,3 +58,32 @@ export function formatMethodName(methodId) {
         .map(word => word.charAt(0) + word.slice(1).toLowerCase())
         .join(' ');
 }
+
+export const validate = (formData, categoryId) => {
+    let tempErrors = {};
+    if (!formData.productName) tempErrors.productName = 'Product name is required';
+    if (formData.productName && (formData.productName.length < 3 || formData.productName.length > 20))
+        tempErrors.productName = 'Product name must be between 3 and 20 characters';
+
+    if (!formData.description) tempErrors.description = 'Description is required';
+
+    if (!formData.price) tempErrors.price = 'Price is required';
+    if (formData.price && isNaN(parseFloat(formData.price)))
+        tempErrors.price = 'Price must be a number';
+    if (formData.price && parseFloat(formData.price) <= 0)
+        tempErrors.price = 'Price must be greater than zero';
+
+    if (!formData.currency) tempErrors.currency = 'Currency is required';
+
+    if (!categoryId) tempErrors.categoryId = 'Category is required';
+    if (!formData.subcategoryId) tempErrors.subcategoryId = 'Subcategory is required';
+
+    if (!formData.supplier) tempErrors.supplier = 'Supplier is required';
+
+    if (formData.stock === '' || isNaN(parseInt(formData.stock)))
+        tempErrors.stock = 'Stock must be a number';
+
+    if (!formData.size) tempErrors.size = 'Size is required';
+
+    return Object.keys(tempErrors).length === 0;
+};

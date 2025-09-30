@@ -50,7 +50,7 @@ const ProductsTable = ({ products }) => {
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
-                                setCurrentPage(1); // Reset to first page on search
+                                setCurrentPage(1);
                             }}
                             className="px-3 py-2 border border-gray-300 rounded-md w-full md:w-64"
                         />
@@ -148,7 +148,7 @@ const ProductsTable = ({ products }) => {
                                     Edit
                                 </Link>
                                 <Link
-                                    to={`/admin/products/images/${product.productId}`}
+                                    to={`/api/products/${product.productId}/images`}
                                     className="text-green-600 hover:text-green-900"
                                 >
                                     Images
