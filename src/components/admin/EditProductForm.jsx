@@ -3,7 +3,7 @@ import Button from '../common/Button';
 
 const currencies = ['PLN', 'EUR', 'USD', 'GBP'];
 
-const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, onSubmit }) => {
+const EditProductForm = ({ product, categories, subcategories, sizes, onCategoryChange, onSubmit, onCancel }) => {
     const [formData, setFormData] = useState({
         productName: '',
         description: '',
@@ -20,10 +20,30 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (categoryId) {
-            setFormData(prev => ({ ...prev, subcategoryId: '' }));
+        if (product) {
+            setFormData({
+                productName: product.productName || '',
+                description: product.description || '',
+                price: product.price || '',
+                currency: product.currency || 'PLN',
+                subcategoryId: product.subcategoryId || '',
+                supplier: product.supplier || '',
+                stock: product.stock || 0,
+                size: product.size || ''
+            });
+
+            if (product.subcategoryId && categories.length > 0) {
+                const category = categories.find(cat =>
+                    cat.subcategoryId === product.subcategoryId ||
+                    (cat.subcategories && cat.subcategories.some(sub => sub.subcategoryId === product.subcategoryId))
+                );
+                if (category) {
+                    setCategoryId(category.categoryId);
+                    onCategoryChange(category.categoryId);
+                }
+            }
         }
-    }, [categoryId]);
+    }, [product, categories, onCategoryChange]);
 
     const validate = () => {
         const validationErrors = validate(formData, categoryId);
@@ -37,6 +57,10 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
         if (name === 'categoryId') {
             setCategoryId(value);
             onCategoryChange(value);
+            setFormData(prev => ({
+                ...prev,
+                subcategoryId: ''
+            }));
         } else {
             setFormData(prev => ({
                 ...prev,
@@ -60,21 +84,7 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                 price: parseFloat(formData.price)
             };
 
-            const success = await onSubmit(productData);
-
-            if (success) {
-                setFormData({
-                    productName: '',
-                    description: '',
-                    price: '',
-                    currency: 'PLN',
-                    subcategoryId: '',
-                    supplier: '',
-                    stock: 0,
-                    size: ''
-                });
-                setCategoryId('');
-            }
+            await onSubmit(productData);
         } finally {
             setIsSubmitting(false);
         }
@@ -82,7 +92,16 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-6">Add New Product</h2>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Edit Product</h2>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                >
+                    Cancel
+                </Button>
+            </div>
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -244,6 +263,7 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                             <p className="mt-1 text-sm text-red-600">{errors.subcategoryId}</p>
                         )}
                     </div>
+
                 </div>
 
                 <div className="mt-6">
@@ -263,16 +283,22 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
                     )}
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-6 flex justify-end space-x-3">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onCancel}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         type="submit"
                         variant="primary"
-                        fullWidth={false}
                         disabled={isSubmitting}
                         loading={isSubmitting}
                         className="px-6"
                     >
-                        {isSubmitting ? 'Creating Product...' : 'Create Product'}
+                        {isSubmitting ? 'Updating Product...' : 'Update Product'}
                     </Button>
                 </div>
             </form>
@@ -280,4 +306,4 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
     );
 };
 
-export default NewProductForm;
+export default EditProductForm;

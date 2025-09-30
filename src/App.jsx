@@ -15,6 +15,7 @@ import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminProductEditPage from './pages/admin/AdminProductEditPage';
 import AdminProductImagePage from './pages/admin/AdminProductImagePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -25,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
         return <div>Loading...</div>;
     }
 
-    return currentUser ? children : <Navigate to="/login" replace />;
+    return currentUser ? children : <Navigate to="/" replace />;
 };
 
 const AdminRoute = ({ children }) => {
@@ -36,7 +37,7 @@ const AdminRoute = ({ children }) => {
     }
 
     if (!currentUser) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
     const isAdmin = currentUser.roles && currentUser.roles.includes('USER_WRITE');
 
@@ -87,6 +88,11 @@ const App = () => {
                         <Route path="/admin/products" element={
                             <AdminRoute>
                                 <AdminProductsPage />
+                            </AdminRoute>
+                        } />
+                        <Route path="/admin/products/edit/:id" element={
+                            <AdminRoute>
+                                <AdminProductEditPage />
                             </AdminRoute>
                         } />
                         <Route path="/admin/products/images/:id" element={

@@ -107,7 +107,6 @@ export const addNewProduct = (productData) => {
         description: productData.description,
         price: productData.price,
         currency: productData.currency,
-        imageId: productData.imageId || 0,
         subcategoryId: productData.subcategoryId,
         supplier: productData.supplier,
         stock: productData.stock,
@@ -115,4 +114,23 @@ export const addNewProduct = (productData) => {
     };
 
     return api.post('/products', transformedData);
+};
+
+export const updateProduct = (productId, productData) => {
+    const transformedData = {
+        productName: productData.productName,
+        description: productData.description,
+        price: productData.price,
+        currency: productData.currency,
+        subcategoryId: productData.subcategoryId,
+        supplier: productData.supplier,
+        stock: productData.stock,
+        size: productData.size
+    };
+
+    return api.put(`/products/${productId}`, transformedData);
+};
+
+export const deleteProduct = (productId) => {
+    return api.delete(`/products/${productId}`);
 };
