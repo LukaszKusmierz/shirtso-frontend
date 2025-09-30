@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
+import { validate } from '../../utils/Helpers';
 
 const currencies = ['PLN', 'EUR', 'USD', 'GBP'];
 
@@ -25,7 +26,7 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
         }
     }, [categoryId]);
 
-    const validate = () => {
+    const validateForm = () => {
         const validationErrors = validate(formData, categoryId);
         setErrors(validationErrors);
         return Object.keys(validationErrors).length === 0;
@@ -50,7 +51,7 @@ const NewProductForm = ({ categories, subcategories, sizes, onCategoryChange, on
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validate()) return;
+        if (!validateForm()) return;
 
         setIsSubmitting(true);
 
