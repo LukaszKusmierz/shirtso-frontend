@@ -1,26 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import ProductDetails from '../components/products/ProductDetails';
-import { getProductWithImages } from '../services/ProductService';
-import Spinner from "../components/common/Spinner";
-import Alert from "../components/common/Alert";
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import GroupedProductDetails from '../components/products/GroupedProductDetails';
+import { getGroupedProductByVariantId } from '../services/ProductService';
+import Spinner from '../components/common/Spinner';
+import Alert from '../components/common/Alert';
 
 const ProductDetailPage = () => {
     const { id } = useParams();
-    const [product, setProduct] = useState(null);
+    const location = useLocation();
+    const [groupedProduct, setGroupedProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchProduct = async () => {
+        const fetchGroupedProduct = async () => {
             setLoading(true);
             setError(null);
 
             try {
-                const productWithImages = await getProductWithImages(id);
-                setProduct(productWithImages);
+                // Check if we already have the grouped product from navigation state
+                if (location.state?.groupedProduct) {
+                    setGroupedProduct(location.state.groupedProduct);
+                    setLoading(false);
+                    return;
+                }
 
+                // Otherwise, fetch from backend using the variant ID
+                const data = await getGroupedProductByVariantId(id);
+                setGroupedProduct(data);
             } catch (err) {
                 setError('Failed to load product');
                 console.error(err);
@@ -29,8 +37,9 @@ const ProductDetailPage = () => {
             }
         };
 
-        fetchProduct();
-    }, [id]);
+        fetchGroupedProduct();
+    }, [id, location.state]);
+
     const handleGoBack = () => {
         navigate(-1);
     };
@@ -45,13 +54,13 @@ const ProductDetailPage = () => {
         );
     }
 
-    if (error) {
+    if (error || !groupedProduct) {
         return (
             <div className="container mx-auto p-4">
                 <Alert
                     type="error"
                     title="Error"
-                    message={error}
+                    message={error || 'Product not found'}
                     dismissible={false}
                     className="mb-4"
                 />
@@ -74,7 +83,7 @@ const ProductDetailPage = () => {
                 <span className="mr-1">←</span> Back to Products
             </button>
 
-            <ProductDetails product={product} />
+            <GroupedProductDetails groupedProduct={groupedProduct} />
         </div>
     );
 };

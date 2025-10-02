@@ -1,16 +1,16 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import ProductList from '../components/products/ProductList';
+import GroupedProductList from '../components/products/GroupedProductList';
 import ProductFilters from '../components/products/ProductFilters';
 import {
-    getAllProducts,
-    getProductsBySubcategory,
-    getProductsInStock,
-    getProductsByName,
-    getProductsBySizeAndSubcategory,
-    getProductsBySize,
-    getProductsByCategoryId,
-    getProductsBySizeAndCategory
+    getAllGroupedProducts,
+    getGroupedProductsBySubcategory,
+    getGroupedProductsInStock,
+    getGroupedProductsByName,
+    getGroupedProductsBySizeAndSubcategory,
+    getGroupedProductsBySize,
+    getGroupedProductsByCategory,
+    getGroupedProductsBySizeAndCategory
 } from '../services/ProductService';
 
 const ProductsPage = () => {
@@ -36,15 +36,13 @@ const ProductsPage = () => {
         const size = searchParams.get('size');
         const search = searchParams.get('search');
 
-        console.log('URL params - categoryId:', categoryId, 'subcategoryId:', subcategoryId);
-
-        setFilters((prev) => ({
+        setFilters({
             categoryId: categoryId || null,
             subcategoryId: subcategoryId || null,
             size: size || null,
             search: search || '',
             inStock: false,
-        }));
+        });
         setFiltersInitialized(true);
     }, [location.search]);
 
@@ -62,37 +60,30 @@ const ProductsPage = () => {
                 let args = [];
 
                 if (filters.search) {
-                    productFunction = getProductsByName;
+                    productFunction = getGroupedProductsByName;
                     args = [filters.search];
-                    console.log('Using getProductsByName with:', filters.search);
                 } else if (filters.size && filters.subcategoryId) {
-                    productFunction = getProductsBySizeAndSubcategory;
+                    productFunction = getGroupedProductsBySizeAndSubcategory;
                     args = [filters.size, filters.subcategoryId];
-                    console.log('Using getProductsBySizeAndSubcategory with:', filters.size, filters.subcategoryId);
                 } else if (filters.size && filters.categoryId) {
-                    productFunction = getProductsBySizeAndCategory;
+                    productFunction = getGroupedProductsBySizeAndCategory;
                     args = [filters.size, filters.categoryId];
                 } else if (filters.subcategoryId) {
-                    productFunction = getProductsBySubcategory;
+                    productFunction = getGroupedProductsBySubcategory;
                     args = [filters.subcategoryId];
-                    console.log('Using getProductsBySubcategory with:', filters.subcategoryId);
                 } else if (filters.categoryId) {
-                    productFunction = getProductsByCategoryId;
+                    productFunction = getGroupedProductsByCategory;
                     args = [filters.categoryId];
-                    console.log('Using getProductsByCategoryId with:', filters.categoryId);
                 } else if (filters.size) {
-                    productFunction = getProductsBySize;
+                    productFunction = getGroupedProductsBySize;
                     args = [filters.size];
-                    console.log('Using getProductsBySize with:', filters.size);
                 } else if (filters.inStock) {
-                    productFunction = getProductsInStock;
-                    console.log('Using getProductsInStock');
+                    productFunction = getGroupedProductsInStock;
                 } else {
-                    productFunction = getAllProducts;
-                    console.log('Using getAllProducts');
+                    productFunction = getAllGroupedProducts;
                 }
+
                 const data = await productFunction(...args);
-                console.log('Fetched products count:', data.length);
                 setProducts(data);
             } catch (err) {
                 setError('Failed to load products');
@@ -110,7 +101,7 @@ const ProductsPage = () => {
         let result = [...products];
 
         if (filters.inStock) {
-            result = result.filter((product) => product.stock > 0);
+            result = result.filter((product) => product.totalStock > 0);
         }
 
         setFilteredProducts(result);
@@ -166,7 +157,7 @@ const ProductsPage = () => {
                 </div>
 
                 <div className="md:w-3/4">
-                    <ProductList
+                    <GroupedProductList
                         products={filteredProducts}
                         loading={loading}
                         error={error}

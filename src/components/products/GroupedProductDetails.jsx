@@ -6,9 +6,10 @@ import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
 
-const ProductDetails = ({ product }) => {
+const GroupedProductDetails = ({ groupedProduct }) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedVariant, setSelectedVariant] = useState(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [imagesLoaded, setImagesLoaded] = useState({});
     const [addingToCart, setAddingToCart] = useState(false);
@@ -16,35 +17,33 @@ const ProductDetails = ({ product }) => {
     const [successMessage, setSuccessMessage] = useState(null);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const images = product?.images || [];
-    const hasImages = Array.isArray(images) && images.length > 0;
-    const sortedImages = hasImages
-        ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
-        : [];
-    const primaryImageIndex = hasImages
-        ? sortedImages.findIndex(image => image.isPrimary)
-        : -1;
+
+    const {
+        productName,
+        description,
+        price,
+        currency,
+        supplier,
+        images = [],
+        sizeVariants = [],
+        availableSizes = [],
+        totalStock
+    } = groupedProduct;
 
     useEffect(() => {
-        if (!product) return;
-
-        if (primaryImageIndex >= 0) {
-            setSelectedImageIndex(primaryImageIndex);
-        } else if (sortedImages.length > 0) {
-            setSelectedImageIndex(0);
+        const defaultVariant = sizeVariants.find(v => v.stock > 0) || sizeVariants[0];
+        if (defaultVariant) {
+            setSelectedSize(defaultVariant.size);
+            setSelectedVariant(defaultVariant);
         }
-        const firstAvailableSize = product.sizeVariants.find(v => v.stock > 0);
-        if (firstAvailableSize) {
-            setSelectedSize(firstAvailableSize.size);
-        }
-    }, [product, primaryImageIndex, sortedImages.length]);
+    }, [sizeVariants]);
 
-    const currentSizeVariant = selectedSize
-        ? product.sizeVariants.find(v => v.size === selectedSize)
-        : null;
-
-    const currentStock = currentSizeVariant?.stock || 0;
-    const currentProductId = currentSizeVariant?.productId;
+    const handleSizeChange = (size) => {
+        setSelectedSize(size);
+        const variant = sizeVariants.find(v => v.size === size);
+        setSelectedVariant(variant);
+        setQuantity(1);
+    };
 
     const handleAddToCart = async () => {
         if (!currentUser) {
@@ -52,21 +51,22 @@ const ProductDetails = ({ product }) => {
             return;
         }
 
-        if (!selectedSize) {
-            setError('Please select a size.');
+        if (!selectedVariant) {
+            setError('Please select a size');
             return;
         }
 
-        if (quantity < 1 || quantity > currentStock) {
+        if (quantity < 1 || quantity > selectedVariant.stock) {
             setError('Please select a valid quantity.');
             return;
         }
+
         setAddingToCart(true);
         setError(null);
 
         try {
-            await addToCart(currentProductId, quantity);
-            setSuccessMessage(`Added ${quantity} ${product.productName} (Size ${selectedSize}) to cart!`);
+            await addToCart(selectedVariant.productId, quantity);
+            setSuccessMessage(`Added ${quantity} ${productName} (Size: ${selectedSize}) to cart!`);
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 3000);
@@ -76,11 +76,6 @@ const ProductDetails = ({ product }) => {
         } finally {
             setAddingToCart(false);
         }
-    };
-
-    const handleSizeChange = (size) => {
-        setSelectedSize(size);
-        setQuantity(1);
     };
 
     const handleImageClick = (index) => {
@@ -94,23 +89,19 @@ const ProductDetails = ({ product }) => {
         }));
     };
 
-    if (!product) {
-        return (
-            <div className="text-center p-8">
-                <p className="text-gray-500">Product not found</p>
-            </div>
-        );
-    }
+    const hasImages = Array.isArray(images) && images.length > 0;
+    const sortedImages = hasImages
+        ? [...images].sort((a, b) => a.displayOrder - b.displayOrder)
+        : [];
 
-    const {
-        productName,
-        description,
-        price,
-        currency,
-        supplier,
-        sizeVariants,
-        totalStock
-    } = product;
+    const primaryImageIndex = sortedImages.findIndex(img => img.isPrimary);
+    useEffect(() => {
+        if (primaryImageIndex >= 0) {
+            setSelectedImageIndex(primaryImageIndex);
+        }
+    }, [primaryImageIndex]);
+
+    const currentStock = selectedVariant?.stock || 0;
 
     return (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -135,6 +126,7 @@ const ProductDetails = ({ product }) => {
             )}
 
             <div className="md:flex">
+                {/* Image Gallery */}
                 <div className="md:w-1/2">
                     <div className="h-64 md:h-96 bg-gray-200 flex items-center justify-center overflow-hidden">
                         {hasImages && sortedImages.length > 0 && imagesLoaded[selectedImageIndex] !== false ? (
@@ -152,6 +144,8 @@ const ProductDetails = ({ product }) => {
                             />
                         )}
                     </div>
+
+                    {/* Thumbnail images */}
                     {hasImages && sortedImages.length > 1 && (
                         <div className="flex overflow-x-auto p-2 space-x-2">
                             {sortedImages.map((image, index) => (
@@ -176,6 +170,7 @@ const ProductDetails = ({ product }) => {
                     )}
                 </div>
 
+                {/* Product Info */}
                 <div className="md:w-1/2 p-6">
                     <h1 className="text-2xl font-bold mb-2">{productName}</h1>
 
@@ -183,6 +178,11 @@ const ProductDetails = ({ product }) => {
                         <span className="text-xl font-semibold">
                             {price} {currency}
                         </span>
+                        {sizeVariants.length > 1 && (
+                            <span className="ml-2 text-sm text-gray-500">
+                                ({sizeVariants.length} sizes available)
+                            </span>
+                        )}
                     </div>
 
                     <div className="mb-4">
@@ -191,59 +191,73 @@ const ProductDetails = ({ product }) => {
                     </div>
 
                     {/* Size Selection */}
-                    <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-2">Select Size</h2>
-                        <div className="flex flex-wrap gap-2">
-                            {sizeVariants.map((variant) => {
-                                const isAvailable = variant.stock > 0;
-                                const isSelected = selectedSize === variant.size;
+                    {availableSizes.length > 1 ? (
+                        <div className="mb-6">
+                            <h2 className="text-lg font-semibold mb-3">Select Size</h2>
+                            <div className="flex flex-wrap gap-2">
+                                {availableSizes.map((size) => {
+                                    const variant = sizeVariants.find(v => v.size === size);
+                                    const isInStock = variant && variant.stock > 0;
+                                    const isSelected = selectedSize === size;
 
-                                return (
-                                    <button
-                                        key={variant.size}
-                                        onClick={() => isAvailable && handleSizeChange(variant.size)}
-                                        disabled={!isAvailable}
-                                        className={`px-4 py-2 rounded border-2 transition-colors ${
-                                            isSelected
-                                                ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold'
-                                                : isAvailable
-                                                    ? 'border-gray-300 hover:border-blue-400 text-gray-700'
-                                                    : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
-                                    >
-                                        {variant.size}
-                                        {!isAvailable && ' (Out of Stock)'}
-                                    </button>
-                                );
-                            })}
+                                    return (
+                                        <button
+                                            key={size}
+                                            onClick={() => isInStock && handleSizeChange(size)}
+                                            disabled={!isInStock}
+                                            className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                                                isSelected
+                                                    ? 'border-blue-500 bg-blue-500 text-white'
+                                                    : isInStock
+                                                        ? 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+                                                        : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through'
+                                            }`}
+                                            title={isInStock ? `${variant.stock} in stock` : 'Out of stock'}
+                                        >
+                                            {size}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {selectedSize && selectedVariant && (
+                                <p className="mt-2 text-sm text-gray-600">
+                                    Selected: Size {selectedSize} - {selectedVariant.stock} available
+                                </p>
+                            )}
                         </div>
-                        {selectedSize && (
-                            <p className="mt-2 text-sm text-gray-600">
-                                Available stock for size {selectedSize}: {currentStock}
-                            </p>
-                        )}
-                    </div>
+                    ) : (
+                        <div className="mb-4">
+                            <span className="inline-block px-3 py-1 bg-gray-100 rounded-lg text-sm">
+                                Size: {availableSizes[0] || 'One Size'}
+                            </span>
+                        </div>
+                    )}
 
                     <div className="mb-4">
                         <h2 className="text-lg font-semibold mb-2">Details</h2>
                         <ul className="text-gray-700">
                             <li><span className="font-medium">Supplier:</span> {supplier}</li>
                             <li>
-                                <span className="font-medium">Total Available Stock:</span>{' '}
-                                <span className={totalStock === 0 ? 'text-red-600' : totalStock < 10 ? 'text-orange-600' : 'text-green-600'}>
-                                    {totalStock}
+                                <span className="font-medium">Available Stock:</span>{' '}
+                                <span className={currentStock === 0 ? 'text-red-600' : currentStock < 5 ? 'text-orange-600' : 'text-green-600'}>
+                                    {currentStock}
                                 </span>
+                            </li>
+                            <li>
+                                <span className="font-medium">Total Stock (all sizes):</span>{' '}
+                                <span className="text-gray-600">{totalStock}</span>
                             </li>
                         </ul>
                     </div>
 
-                    {currentStock > 0 && selectedSize ? (
+                    {/* Add to Cart Section */}
+                    {currentStock > 0 && selectedVariant ? (
                         <div className="mb-6">
                             <div className="flex items-center mb-4">
                                 <label className="mr-4 font-medium">Quantity:</label>
                                 <div className="flex items-center">
                                     <button
-                                        className="w-8 h-8 rounded-l border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                        className="w-8 h-8 rounded-l border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                     >
                                         -
@@ -257,7 +271,7 @@ const ProductDetails = ({ product }) => {
                                         className="w-12 h-8 text-center border-t border-b border-gray-300"
                                     />
                                     <button
-                                        className="w-8 h-8 rounded-r border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                        className="w-8 h-8 rounded-r border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                                         onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
                                     >
                                         +
@@ -272,22 +286,22 @@ const ProductDetails = ({ product }) => {
                                 disabled={addingToCart || !selectedSize}
                                 loading={addingToCart}
                             >
-                                Add to Cart
+                                {!selectedSize ? 'Select a Size' : 'Add to Cart'}
                             </Button>
                         </div>
                     ) : (
                         <div className="mb-6">
                             <p className="text-red-600 mb-4">
-                                {selectedSize
-                                    ? `Size ${selectedSize} is currently out of stock.`
-                                    : 'Please select a size.'}
+                                {!selectedSize
+                                    ? 'Please select a size'
+                                    : 'This size is currently out of stock.'}
                             </p>
                             <Button
                                 variant="secondary"
                                 fullWidth={true}
                                 disabled={true}
                             >
-                                {selectedSize ? 'Out of Stock' : 'Select a Size'}
+                                Out of Stock
                             </Button>
                         </div>
                     )}
@@ -297,4 +311,4 @@ const ProductDetails = ({ product }) => {
     );
 };
 
-export default ProductDetails;
+export default GroupedProductDetails;

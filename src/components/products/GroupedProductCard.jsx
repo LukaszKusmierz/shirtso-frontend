@@ -1,17 +1,28 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {getStockStatusColor, getImageUrl, getPlaceholderUrl} from "../../utils/Helpers";
+import { getStockStatusColor, getImageUrl, getPlaceholderUrl } from "../../utils/Helpers";
 
-const ProductCard = ({ product }) => {
-    const { productName, price, currency, description, sizeVariants, totalStock, images } = product;
+const GroupedProductCard = ({ product }) => {
+    const {
+        productName,
+        description,
+        price,
+        currency,
+        totalStock,
+        availableSizes,
+        sizeVariants,
+        images
+    } = product;
+
     const hasImages = Array.isArray(images) && images.length > 0;
     const primaryImage = hasImages
-        ? images.find(image => image.isPrimary) || images[0]
+        ? images.find(img => img.isPrimary) || images[0]
         : null;
-    const availableSizes = sizeVariants
-        .filter(v => v.stock > 0)
-        .map(v => v.size);
-    const productIdentifier = encodeURIComponent(`${productName}-${description.substring(0, 20)}`);
+
+    const defaultVariant = sizeVariants.find(v => v.stock > 0) || sizeVariants[0];
+    const productLink = defaultVariant ? `/products/${defaultVariant.productId}` : '#';
+
+    const priceDisplay = `${price} ${currency}`;
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:scale-105">
@@ -30,9 +41,7 @@ const ProductCard = ({ product }) => {
                         }}
                     />
                 ) : (
-                    <span className="text-gray-400 text-4xl">
-                        <img src={getPlaceholderUrl()} alt={"unavailable"}></img>
-                    </span>
+                    <img src={getPlaceholderUrl()} alt="Product unavailable" />
                 )}
             </div>
 
@@ -42,36 +51,44 @@ const ProductCard = ({ product }) => {
 
                 <div className="flex justify-between items-center mb-3">
                     <span className="font-bold text-lg">
-                        {price} {currency}
+                        {priceDisplay}
                     </span>
+                    <div className="text-sm text-gray-600">
+                        {sizeVariants.length} {sizeVariants.length === 1 ? 'size' : 'sizes'}
+                    </div>
                 </div>
 
+                {/* Available sizes */}
                 <div className="mb-3">
-                    <p className="text-xs text-gray-500 mb-1">Available Sizes:</p>
                     <div className="flex flex-wrap gap-1">
-                        {availableSizes.length > 0 ? (
-                            availableSizes.map(size => (
+                        {availableSizes.map((size) => {
+                            const variant = sizeVariants.find(v => v.size === size);
+                            const isInStock = variant && variant.stock > 0;
+                            return (
                                 <span
                                     key={size}
-                                    className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200"
+                                    className={`text-xs px-2 py-1 rounded border ${
+                                        isInStock
+                                            ? 'border-blue-500 text-blue-700 bg-blue-50'
+                                            : 'border-gray-300 text-gray-400 bg-gray-50'
+                                    }`}
+                                    title={isInStock ? `${variant.stock} in stock` : 'Out of stock'}
                                 >
                                     {size}
                                 </span>
-                            ))
-                        ) : (
-                            <span className="text-xs text-red-600">All sizes out of stock</span>
-                        )}
+                            );
+                        })}
                     </div>
                 </div>
 
                 <div className="flex justify-between items-center">
                     <span className={`text-xs px-2 py-1 rounded-full ${getStockStatusColor(totalStock)}`}>
-                        {totalStock === 0 ? 'Out of stock' : `${totalStock} total in stock`}
+                        {totalStock === 0 ? 'Out of stock' : `${totalStock} in stock`}
                     </span>
 
                     <Link
-                        to={`/products/variant/${productIdentifier}`}
-                        state={{ product }}
+                        to={productLink}
+                        state={{ groupedProduct: product }}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
                         View Details
@@ -80,6 +97,6 @@ const ProductCard = ({ product }) => {
             </div>
         </div>
     );
-}
+};
 
-export default ProductCard;
+export default GroupedProductCard;
