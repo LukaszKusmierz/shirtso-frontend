@@ -36,10 +36,6 @@ export const removeImageFromProduct = (productId, imageId) => {
     return api.delete(`/products/${productId}/images/${imageId}`);
 };
 
-export const getProductImages = (productId) => {
-    return api.get(`/products/${productId}/images`);
-};
-
 export const getProductPrimaryImage = (productId) => {
     return api.get(`/products/${productId}/images/primary`);
 };

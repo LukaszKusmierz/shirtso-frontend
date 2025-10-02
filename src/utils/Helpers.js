@@ -1,13 +1,3 @@
-export const formatPrice = (price, currency) => {
-    return `${price} ${currency}`;
-};
-
-export const getStockStatus = (stock) => {
-    if (stock === 0) return { text: 'Out of stock', color: 'red' };
-    if (stock < 3) return { text: 'Low stock', color: 'orange' };
-    return { text: 'In stock', color: 'green' };
-};
-
 export const getStockStatusColor = (stock) => {
     if (stock === 0) return 'bg-red-100 text-red-800';
     if (stock < 3) return 'bg-yellow-100 text-yellow-800';
@@ -35,22 +25,6 @@ export const getPlaceholderUrl = () => {
     const baseUrl = process.env.REACT_APP_STATIC_URL || '';
     return `${baseUrl}/placeholder-product.png`;
 };
-
-export const getProductImages = (product) => {
-    if (!product) return [];
-    const images = product.images || product.imageMappings || [];
-    return Array.isArray(images) ? images : [];
-}
-
-export const getPrimaryImage = (images) => {
-    if (!Array.isArray(images) || images.length === 0) return null;
-    return images.find(img => img.isPrimary) || images[0];
-}
-
-export const getSortedImages = (images) => {
-    if (!Array.isArray(images) || images.length === 0) return [];
-    return [...images].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-}
 
 export function formatMethodName(methodId) {
     return methodId
@@ -86,4 +60,86 @@ export const validate = (formData, categoryId) => {
     if (!formData.size) tempErrors.size = 'Size is required';
 
     return Object.keys(tempErrors).length === 0;
+};
+
+export const groupProducts = (products) => {
+    const groups = {};
+
+    products.forEach(product => {
+        // Create a unique key for each product group
+        const key = `${product.productName}-${product.description}-${product.supplier}`;
+
+        if (!groups[key]) {
+            groups[key] = {
+                groupId: key,
+                productName: product.productName,
+                description: product.description,
+                supplier: product.supplier,
+                currency: product.currency,
+                variants: [],
+                images: product.images || [],
+                minPrice: product.price,
+                maxPrice: product.price,
+                totalStock: 0,
+                availableSizes: []
+            };
+        }
+
+        groups[key].variants.push({
+            productId: product.productId,
+            size: product.size,
+            price: product.price,
+            stock: product.stock,
+            currency: product.currency,
+            subcategoryId: product.subcategoryId
+        });
+
+        groups[key].minPrice = Math.min(groups[key].minPrice, product.price);
+        groups[key].maxPrice = Math.max(groups[key].maxPrice, product.price);
+        groups[key].totalStock += product.stock;
+
+        if (!groups[key].availableSizes.includes(product.size)) {
+            groups[key].availableSizes.push(product.size);
+        }
+
+        if ((!groups[key].images || groups[key].images.length === 0) &&
+            product.images && product.images.length > 0) {
+            groups[key].images = product.images;
+        }
+    });
+
+    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
+    return Object.values(groups).map(group => ({
+        ...group,
+        variants: group.variants.sort((a, b) =>
+            sizeOrder.indexOf(a.size) - sizeOrder.indexOf(b.size)
+        ),
+        availableSizes: group.availableSizes.sort((a, b) =>
+            sizeOrder.indexOf(a) - sizeOrder.indexOf(b)
+        )
+    }));
+};
+
+export const getDefaultVariant = (productGroup) => {
+    if (!productGroup || !productGroup.variants || productGroup.variants.length === 0) {
+        return null;
+    }
+
+    const inStockVariant = productGroup.variants.find(v => v.stock > 0);
+    return inStockVariant || productGroup.variants[0];
+};
+
+export const getVariantBySize = (productGroup, size) => {
+    if (!productGroup || !productGroup.variants) {
+        return null;
+    }
+    return productGroup.variants.find(v => v.size === size);
+};
+
+export const formatPriceRange = (minPrice, maxPrice, currency) => {
+    if (minPrice === maxPrice) {
+        return `${minPrice} ${currency}`;
+    }
+    return `${minPrice} - ${maxPrice} ${currency}`;
 };

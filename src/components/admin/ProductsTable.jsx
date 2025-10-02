@@ -148,7 +148,7 @@ const ProductsTable = ({ products }) => {
                                     Edit
                                 </Link>
                                 <Link
-                                    to={`/api/products/${product.productId}/images`}
+                                    to={`/admin/products/${product.productId}/images`}
                                     className="text-green-600 hover:text-green-900"
                                 >
                                     Images

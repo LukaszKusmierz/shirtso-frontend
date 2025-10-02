@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import {
-    getProductWithImages,
-    getProductImages
+    getProductImages,
+    getProductWithImages
 } from '../../services/ProductService';
 import {
-    getAllImages,
     createImage,
     associateImageWithProduct,
     setPrimaryImage,
@@ -45,7 +44,6 @@ const ProductImageManagement = () => {
                 setLoading(true);
                 const [productData, imagesData] = await Promise.all([
                     getProductWithImages(id),
-                    getAllImages()
                 ]);
 
                 setProduct(productData);

@@ -1,10 +1,10 @@
 import React from 'react';
-import ProductImageManagement from '../../components/admin/ProductImageManagement';
+import ProductImage from '../../components/admin/ProductImage';
 
 const AdminProductImagePage = () => {
     return (
         <div className="container mx-auto p-4">
-            <ProductImageManagement />
+            <ProductImage />
         </div>
     );
 };

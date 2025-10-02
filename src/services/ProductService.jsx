@@ -71,36 +71,6 @@ export const getProductWithImages = async (productId) => {
     }
 }
 
-// export const getProductsWithImages = async (productsFunction, ...args) => {
-//     try {
-//         const products = await productsFunction(...args);
-//         const productsWithImages = await Promise.all(
-//             products.map(async (product) => {
-//                 try {
-//                     const images = await getProductImages(product.productId);
-//                     return {
-//                         ...product,
-//                         images: images,
-//                         imageMappings: images
-//                     };
-//                 } catch (error) {
-//                     console.warn(`Failed to fetch images for product ${product.productId}:`, error);
-//                     return {
-//                         ...product,
-//                         images: [],
-//                         imageMappings: []
-//                     };
-//                 }
-//             })
-//         );
-//
-//         return productsWithImages;
-//     } catch (error) {
-//         console.error('Failed to fetch products with images:', error);
-//         throw error;
-//     }
-// }
-
 export const addNewProduct = (productData) => {
     const transformedData = {
         productName: productData.productName,
@@ -133,4 +103,41 @@ export const updateProduct = (productId, productData) => {
 
 export const deleteProduct = (productId) => {
     return api.delete(`/products/${productId}`);
+};
+
+export const getAllGroupedProducts = () => {
+    return api.get('/products/grouped');
+};
+
+export const getGroupedProductsByCategory = (categoryId) => {
+    return api.get(`/products/grouped?categoryId=${categoryId}`);
+};
+
+export const getGroupedProductsBySubcategory = (subcategoryId) => {
+    return api.get(`/products/grouped?subcategoryId=${subcategoryId}`);
+};
+
+export const getGroupedProductsBySize = (size) => {
+    return api.get(`/products/grouped?size=${size}`);
+};
+
+export const getGroupedProductsBySizeAndCategory = (size, categoryId) => {
+    return api.get(`/products/grouped?size=${size}&categoryId=${categoryId}`);
+};
+
+export const getGroupedProductsBySizeAndSubcategory = (size, subcategoryId) => {
+    return api.get(`/products/grouped?size=${size}&subcategoryId=${subcategoryId}`);
+};
+
+export const getGroupedProductsInStock = () => {
+    return api.get('/products/grouped/in-stock');
+};
+
+export const getGroupedProductsByName = (productName) => {
+    return api.get(`/products/grouped?productName=${productName}`);
+};
+
+// Get a specific grouped product by any variant's productId
+export const getGroupedProductByVariantId = (productId) => {
+    return api.get(`/products/grouped/${productId}`);
 };

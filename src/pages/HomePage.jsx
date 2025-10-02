@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllCategories } from '../services/CategoryService';
-import { getProductsInStock } from '../services/ProductService';
-import ProductCard from '../components/products/ProductCard';
+import { getGroupedProductsInStock } from '../services/ProductService';
+import GroupedProductCard from '../components/products/GroupedProductCard';
 
 const HomePage = () => {
     const [categories, setCategories] = useState([]);
@@ -15,9 +15,10 @@ const HomePage = () => {
             try {
                 const [categoriesData, productsData] = await Promise.all([
                     getAllCategories(),
-                    getProductsInStock()
+                    getGroupedProductsInStock()
                 ]);
                 setCategories(categoriesData);
+                // Show first 4 grouped products
                 setFeaturedProducts(productsData.slice(0, 4));
             } catch (err) {
                 setError('Failed to load data');
@@ -48,6 +49,8 @@ const HomePage = () => {
                     <p>{error}</p>
                 </div>
             )}
+
+            {/* Hero Section */}
             <section className="mb-12">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-10 rounded-lg shadow-md">
                     <h1 className="text-4xl font-bold mb-4">Witamy w Shirtso</h1>
@@ -61,13 +64,17 @@ const HomePage = () => {
                 </div>
             </section>
 
+            {/* Featured Products Section */}
             <section className="mb-12">
                 <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
 
                 {featuredProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {featuredProducts.map((product) => (
-                            <ProductCard key={product.productId} product={product} />
+                        {featuredProducts.map((product, index) => (
+                            <GroupedProductCard
+                                key={`${product.productName}-${index}`}
+                                product={product}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -86,6 +93,7 @@ const HomePage = () => {
                 </div>
             </section>
 
+            {/* Shop by Category Section */}
             <section className="mb-12">
                 <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
 
