@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import { addToCart } from '../../services/CartService';
-import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
+import {getImageUrl, getPlaceholderUrl, getStockStatusColor} from '../../utils/Helpers';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
 
@@ -219,11 +219,6 @@ const GroupedProductDetails = ({ groupedProduct }) => {
                                     );
                                 })}
                             </div>
-                            {selectedSize && selectedVariant && (
-                                <p className="mt-2 text-sm text-gray-600">
-                                    Selected: Size {selectedSize} - {selectedVariant.stock} available
-                                </p>
-                            )}
                         </div>
                     ) : (
                         <div className="mb-4">
@@ -239,7 +234,7 @@ const GroupedProductDetails = ({ groupedProduct }) => {
                             <li><span className="font-medium">Supplier:</span> {supplier}</li>
                             <li>
                                 <span className="font-medium">Available Stock:</span>{' '}
-                                <span className={currentStock === 0 ? 'text-red-600' : currentStock < 5 ? 'text-orange-600' : 'text-green-600'}>
+                                <span className={`${getStockStatusColor(currentStock)}`}>
                                     {currentStock}
                                 </span>
                             </li>

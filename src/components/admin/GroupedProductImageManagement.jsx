@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import {
     getProductImages,
@@ -16,10 +16,10 @@ import Alert from '../common/Alert';
 import Button from '../common/Button';
 import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 
-const ProductImageManagement = () => {
+const GroupedProductImageManagement = () => {
     const { id } = useParams();
-    const [product, setProduct] = useState(null);
-    const [allImages, setAllImages] = useState([]);
+    const location = useLocation();
+    const [groupedProduct, setGroupedProduct] = useState(location.state?.groupedProduct || null);
     const [productImages, setProductImages] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
     const [newImageUrl, setNewImageUrl] = useState('');
@@ -42,15 +42,17 @@ const ProductImageManagement = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [productData, imagesData] = await Promise.all([
-                    getProductWithImages(id),
-                ]);
 
-                setProduct(productData);
-                setAllImages(imagesData);
+                // If we don't have grouped product from state, fetch it
+                if (!groupedProduct && id) {
+                    const productData = await getProductWithImages(id);
+                    setGroupedProduct(productData);
+                }
 
-                const productImagesData = await getProductImages(id);
-                setProductImages(productImagesData);
+                // Fetch images for the first variant (they should be the same for all)
+                const variantId = groupedProduct?.sizeVariants?.[0]?.productId || id;
+                const imagesData = await getProductImages(variantId);
+                setProductImages(imagesData);
 
                 setError(null);
             } catch (err) {
@@ -62,7 +64,7 @@ const ProductImageManagement = () => {
         };
 
         fetchData();
-    }, [id]);
+    }, [id, groupedProduct]);
 
     const handleCreateImage = async (e) => {
         e.preventDefault();
@@ -80,11 +82,11 @@ const ProductImageManagement = () => {
                 altText: newImageAlt.trim() || null
             };
             const newImage = await createImage(imageData);
-            setAllImages([...allImages, newImage]);
+
             setSelectedImage(newImage.imageId);
             setNewImageUrl('');
             setNewImageAlt('');
-            setSuccessMessage('Image created successfully!');
+            setSuccessMessage('Image created successfully! Now associate it with the product.');
             setTimeout(() => setSuccessMessage(null), 3000);
 
         } catch (err) {
@@ -99,7 +101,12 @@ const ProductImageManagement = () => {
         e.preventDefault();
 
         if (!selectedImage) {
-            setError('Please select an image');
+            setError('Please select or create an image first');
+            return;
+        }
+
+        if (!groupedProduct?.sizeVariants || groupedProduct.sizeVariants.length === 0) {
+            setError('No product variants found');
             return;
         }
 
@@ -110,13 +117,23 @@ const ProductImageManagement = () => {
                 isPrimary: isPrimary,
                 displayOrder: parseInt(displayOrder) || 0
             };
-            await associateImageWithProduct(id, imageData);
-            const productImagesData = await getProductImages(id);
-            setProductImages(productImagesData);
+
+            // Associate image with ALL variants in the group
+            const associationPromises = groupedProduct.sizeVariants.map(variant =>
+                associateImageWithProduct(variant.productId, imageData)
+            );
+
+            await Promise.all(associationPromises);
+
+            // Refresh images
+            const variantId = groupedProduct.sizeVariants[0].productId;
+            const updatedImages = await getProductImages(variantId);
+            setProductImages(updatedImages);
+
             setSelectedImage(null);
             setDisplayOrder(0);
             setIsPrimary(false);
-            setSuccessMessage('Image associated with product successfully!');
+            setSuccessMessage('Image associated with all product variants successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err) {
             setError('Failed to associate image: ' + (err.message || 'Unknown error'));
@@ -127,12 +144,27 @@ const ProductImageManagement = () => {
     };
 
     const handleSetPrimary = async (imageId) => {
+        if (!groupedProduct?.sizeVariants || groupedProduct.sizeVariants.length === 0) {
+            setError('No product variants found');
+            return;
+        }
+
         try {
             setLoading(true);
-            await setPrimaryImage(id, imageId);
-            const productImagesData = await getProductImages(id);
-            setProductImages(productImagesData);
-            setSuccessMessage('Primary image updated successfully!');
+
+            // Set as primary for ALL variants in the group
+            const updatePromises = groupedProduct.sizeVariants.map(variant =>
+                setPrimaryImage(variant.productId, imageId)
+            );
+
+            await Promise.all(updatePromises);
+
+            // Refresh images
+            const variantId = groupedProduct.sizeVariants[0].productId;
+            const updatedImages = await getProductImages(variantId);
+            setProductImages(updatedImages);
+
+            setSuccessMessage('Primary image updated for all variants successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err) {
             setError('Failed to update primary image: ' + (err.message || 'Unknown error'));
@@ -143,16 +175,34 @@ const ProductImageManagement = () => {
     };
 
     const handleRemoveImage = async (imageId) => {
-        if (!window.confirm('Are you sure you want to remove this image from the product?')) {
+        if (!window.confirm('Are you sure you want to remove this image from all product variants?')) {
+            return;
+        }
+
+        if (!groupedProduct?.sizeVariants || groupedProduct.sizeVariants.length === 0) {
+            setError('No product variants found');
             return;
         }
 
         try {
             setLoading(true);
-            await removeImageFromProduct(id, imageId);
-            const productImagesData = await getProductImages(id);
-            setProductImages(productImagesData);
-            setSuccessMessage('Image removed from product successfully!');
+
+            // Remove image from ALL variants in the group
+            const removePromises = groupedProduct.sizeVariants.map(variant =>
+                removeImageFromProduct(variant.productId, imageId).catch(err => {
+                    console.warn(`Failed to remove image from variant ${variant.productId}:`, err);
+                    return null;
+                })
+            );
+
+            await Promise.all(removePromises);
+
+            // Refresh images
+            const variantId = groupedProduct.sizeVariants[0].productId;
+            const updatedImages = await getProductImages(variantId);
+            setProductImages(updatedImages);
+
+            setSuccessMessage('Image removed from all variants successfully!');
             setTimeout(() => setSuccessMessage(null), 3000);
 
         } catch (err) {
@@ -162,11 +212,12 @@ const ProductImageManagement = () => {
             setLoading(false);
         }
     };
+
     const handleGoBack = () => {
         navigate('/admin/products');
     };
 
-    if (loading && !product) {
+    if (loading && !groupedProduct) {
         return (
             <div className="flex justify-center items-center h-64">
                 <Spinner size="lg" />
@@ -174,7 +225,7 @@ const ProductImageManagement = () => {
         );
     }
 
-    if (!product) {
+    if (!groupedProduct) {
         return (
             <div className="container mx-auto p-4">
                 <Alert
@@ -202,7 +253,11 @@ const ProductImageManagement = () => {
                 <span className="mr-1">←</span> Back to Products
             </button>
 
-            <h1 className="text-2xl font-bold mb-6">Image Management for {product.productName}</h1>
+            <h1 className="text-2xl font-bold mb-2">Image Management for {groupedProduct.productName}</h1>
+            <p className="text-gray-600 mb-6">
+                Images will be applied to all {groupedProduct.sizeVariants?.length || 0} size variants:
+                {groupedProduct.availableSizes?.join(', ')}
+            </p>
 
             {error && (
                 <Alert
@@ -230,7 +285,7 @@ const ProductImageManagement = () => {
                     <h2 className="text-xl font-semibold mb-4">Current Images</h2>
 
                     {productImages.length === 0 ? (
-                        <p className="text-gray-500">No images associated with this product</p>
+                        <p className="text-gray-500">No images associated with this product group</p>
                     ) : (
                         <div className="grid grid-cols-2 gap-4">
                             {productImages.map((image) => (
@@ -238,7 +293,7 @@ const ProductImageManagement = () => {
                                     <div className="h-40 bg-gray-100 flex items-center justify-center">
                                         <img
                                             src={getImageUrl(image.imageUrl)}
-                                            alt={image.altText || product.productName}
+                                            alt={image.altText || groupedProduct.productName}
                                             className="max-h-full max-w-full object-contain"
                                             onError={(e) => {
                                                 e.target.src = getPlaceholderUrl();
@@ -257,6 +312,11 @@ const ProductImageManagement = () => {
                                         <p className="text-sm text-gray-600 mb-2">
                                             Order: {image.displayOrder}
                                         </p>
+                                        {image.altText && (
+                                            <p className="text-xs text-gray-500 mb-2 truncate">
+                                                Alt: {image.altText}
+                                            </p>
+                                        )}
                                         <div className="flex space-x-2">
                                             {!image.isPrimary && (
                                                 <button
@@ -264,7 +324,7 @@ const ProductImageManagement = () => {
                                                     className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                                                     disabled={loading}
                                                 >
-                                                    Set as Primary
+                                                    Set Primary
                                                 </button>
                                             )}
                                             <button
@@ -286,7 +346,10 @@ const ProductImageManagement = () => {
                 <div>
                     {/* Create New Image */}
                     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h2 className="text-xl font-semibold mb-4">Create New Image</h2>
+                        <h2 className="text-xl font-semibold mb-4">Create & Add New Image</h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            This will add the image to all {groupedProduct.sizeVariants?.length || 0} variants of this product.
+                        </p>
 
                         <form onSubmit={handleCreateImage}>
                             <div className="mb-4">
@@ -299,6 +362,7 @@ const ProductImageManagement = () => {
                                     value={newImageUrl}
                                     onChange={(e) => setNewImageUrl(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded"
+                                    placeholder="https://example.com/image.jpg or /static/products/image.jpg"
                                     required
                                 />
                             </div>
@@ -313,6 +377,7 @@ const ProductImageManagement = () => {
                                     value={newImageAlt}
                                     onChange={(e) => setNewImageAlt(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded"
+                                    placeholder="Description of the image"
                                 />
                             </div>
 
@@ -327,74 +392,82 @@ const ProductImageManagement = () => {
                         </form>
                     </div>
 
-                    {/* Associate Existing Image */}
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold mb-4">Associate Existing Image</h2>
+                    {/* Associate Image Form */}
+                    {selectedImage && (
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <h2 className="text-xl font-semibold mb-4">Associate Image with Product</h2>
 
-                        <form onSubmit={handleAssociateImage}>
-                            <div className="mb-4">
-                                <label htmlFor="selectedImage" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Select Image *
-                                </label>
-                                <select
-                                    id="selectedImage"
-                                    value={selectedImage || ''}
-                                    onChange={(e) => setSelectedImage(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
-                                >
-                                    <option value="">Select an Image</option>
-                                    {allImages.map(image => (
-                                        <option key={image.imageId} value={image.imageId}>
-                                            ID: {image.imageId} - {image.altText || 'No alt text'}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="mb-4">
-                                <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Display Order
-                                </label>
-                                <input
-                                    type="number"
-                                    id="displayOrder"
-                                    value={displayOrder}
-                                    onChange={(e) => setDisplayOrder(e.target.value)}
-                                    min="0"
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                />
-                            </div>
-
-                            <div className="mb-4">
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="isPrimary"
-                                        checked={isPrimary}
-                                        onChange={(e) => setIsPrimary(e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="isPrimary" className="ml-2 block text-sm text-gray-700">
-                                        Set as primary image
-                                    </label>
+                            <form onSubmit={handleAssociateImage}>
+                                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                                    <p className="text-sm text-blue-800">
+                                        Selected Image ID: <strong>{selectedImage}</strong>
+                                    </p>
                                 </div>
-                            </div>
 
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                disabled={loading || !selectedImage}
-                                loading={loading}
-                            >
-                                Associate Image
-                            </Button>
-                        </form>
-                    </div>
+                                <div className="mb-4">
+                                    <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Display Order
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="displayOrder"
+                                        value={displayOrder}
+                                        onChange={(e) => setDisplayOrder(e.target.value)}
+                                        min="0"
+                                        className="w-full p-2 border border-gray-300 rounded"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="isPrimary"
+                                            checked={isPrimary}
+                                            onChange={(e) => setIsPrimary(e.target.checked)}
+                                            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                        />
+                                        <label htmlFor="isPrimary" className="ml-2 block text-sm text-gray-700">
+                                            Set as primary image
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={loading}
+                                    loading={loading}
+                                >
+                                    Add to All Variants
+                                </Button>
+                            </form>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Variants Info */}
+            <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-4">Product Variants</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {groupedProduct.sizeVariants?.map((variant) => (
+                        <div
+                            key={variant.productId}
+                            className="border rounded p-3 text-center"
+                        >
+                            <div className="font-semibold text-lg">{variant.size}</div>
+                            <div className="text-sm text-gray-600">ID: {variant.productId}</div>
+                            <div className={`text-sm mt-1 ${variant.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                Stock: {variant.stock}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
     );
 };
 
-export default ProductImageManagement;
+export default GroupedProductImageManagement;

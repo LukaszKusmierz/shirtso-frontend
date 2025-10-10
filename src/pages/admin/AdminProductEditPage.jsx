@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
-import { getProductById, updateProduct, getSizes } from '../../services/ProductService';
+import { updateProduct, getSizes, getGroupedProductByVariantId } from '../../services/ProductService';
 import { getAllCategories, getSubcategoriesByCategory } from '../../services/CategoryService';
 import Spinner from '../../components/common/Spinner';
 import Alert from '../../components/common/Alert';
-import EditProductForm from '../../components/admin/EditProductForm';
+import EditGroupedProductForm from '../../components/admin/EditGroupedProductForm';
 
 const AdminProductEditPage = () => {
     const { id } = useParams();
-    const [product, setProduct] = useState(null);
+    const location = useLocation();
+    const [groupedProduct, setGroupedProduct] = useState(location.state?.groupedProduct || null);
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [sizes, setSizes] = useState([]);
@@ -29,18 +30,21 @@ const AdminProductEditPage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [productData, categoriesData, sizesData] = await Promise.all([
-                    getProductById(id),
+
+                // Fetch grouped product if not in state
+                let product = groupedProduct;
+                if (!product) {
+                    product = await getGroupedProductByVariantId(id);
+                    setGroupedProduct(product);
+                }
+
+                const [categoriesData, sizesData] = await Promise.all([
                     getAllCategories(),
                     getSizes()
                 ]);
 
-                setProduct(productData);
                 setCategories(categoriesData);
                 setSizes(sizesData);
-
-                if (productData.subcategoryId) {
-                }
 
                 setError(null);
             } catch (err) {
@@ -52,7 +56,7 @@ const AdminProductEditPage = () => {
         };
 
         fetchData();
-    }, [id]);
+    }, [id, groupedProduct]);
 
     const handleCategoryChange = async (categoryId) => {
         if (!categoryId) {
@@ -69,12 +73,18 @@ const AdminProductEditPage = () => {
         }
     };
 
-    const handleUpdateProduct = async (productData) => {
+    const handleUpdateProducts = async (updates) => {
         try {
             setLoading(true);
-            const updatedProduct = await updateProduct(id, productData);
-            setProduct(updatedProduct);
-            setSuccessMessage('Product updated successfully!');
+
+            // Update all variants
+            const updatePromises = updates.map(updateData =>
+                updateProduct(updateData.productId, updateData)
+            );
+
+            await Promise.all(updatePromises);
+
+            setSuccessMessage(`Successfully updated all ${updates.length} product variants!`);
 
             setTimeout(() => {
                 navigate('/admin/products');
@@ -82,7 +92,7 @@ const AdminProductEditPage = () => {
 
             return true;
         } catch (err) {
-            setError('Failed to update product: ' + (err.message || 'Unknown error'));
+            setError('Failed to update products: ' + (err.message || 'Unknown error'));
             console.error(err);
             return false;
         } finally {
@@ -94,7 +104,7 @@ const AdminProductEditPage = () => {
         navigate('/admin/products');
     };
 
-    if (loading && !product) {
+    if (loading && !groupedProduct) {
         return (
             <div className="flex justify-center items-center h-64">
                 <Spinner size="lg" />
@@ -102,7 +112,7 @@ const AdminProductEditPage = () => {
         );
     }
 
-    if (!product) {
+    if (!groupedProduct) {
         return (
             <div className="container mx-auto p-4">
                 <Alert
@@ -130,7 +140,7 @@ const AdminProductEditPage = () => {
                 <span className="mr-1">←</span> Back to Products
             </button>
 
-            <h1 className="text-2xl font-bold mb-6">Edit Product: {product.productName}</h1>
+            <h1 className="text-2xl font-bold mb-6">Edit Product Group: {groupedProduct.productName}</h1>
 
             {error && (
                 <Alert
@@ -152,13 +162,13 @@ const AdminProductEditPage = () => {
                 />
             )}
 
-            <EditProductForm
-                product={product}
+            <EditGroupedProductForm
+                groupedProduct={groupedProduct}
                 categories={categories}
                 subcategories={subcategories}
                 sizes={sizes}
                 onCategoryChange={handleCategoryChange}
-                onSubmit={handleUpdateProduct}
+                onSubmit={handleUpdateProducts}
                 onCancel={handleCancel}
             />
         </div>

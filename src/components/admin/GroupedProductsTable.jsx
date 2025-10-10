@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getStockStatusColor } from '../../utils/Helpers';
+import { getStockStatusColor, getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 
-const ProductsTable = ({ products }) => {
+const GroupedProductsTable = ({ products }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'productName', direction: 'ascending' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
     const filteredProducts = products.filter(product =>
         product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.supplier.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
             return sortConfig.direction === 'ascending' ? -1 : 1;
@@ -21,10 +23,12 @@ const ProductsTable = ({ products }) => {
         }
         return 0;
     });
+
     const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
+
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -32,16 +36,23 @@ const ProductsTable = ({ products }) => {
         }
         setSortConfig({ key, direction });
     };
+
     const getSortIndicator = (key) => {
         if (sortConfig.key !== key) return null;
         return sortConfig.direction === 'ascending' ? '↑' : '↓';
+    };
+
+    const getDefaultVariant = (product) => {
+        return product.sizeVariants.find(v => v.stock > 0) || product.sizeVariants[0];
     };
 
     return (
         <div className="bg-white rounded-lg shadow">
             <div className="p-4 border-b">
                 <div className="flex flex-col md:flex-row justify-between md:items-center">
-                    <h3 className="text-lg font-semibold mb-2 md:mb-0">Products ({filteredProducts.length})</h3>
+                    <h3 className="text-lg font-semibold mb-2 md:mb-0">
+                        Grouped Products ({filteredProducts.length})
+                    </h3>
 
                     <div className="relative">
                         <input
@@ -73,6 +84,9 @@ const ProductsTable = ({ products }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                     <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Image
+                        </th>
                         <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -87,19 +101,15 @@ const ProductsTable = ({ products }) => {
                         >
                             Price {getSortIndicator('price')}
                         </th>
-                        <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                            onClick={() => requestSort('stock')}
-                        >
-                            Stock {getSortIndicator('stock')}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Sizes
                         </th>
                         <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                            onClick={() => requestSort('size')}
+                            onClick={() => requestSort('totalStock')}
                         >
-                            Size {getSortIndicator('size')}
+                            Total Stock {getSortIndicator('totalStock')}
                         </th>
                         <th
                             scope="col"
@@ -108,54 +118,98 @@ const ProductsTable = ({ products }) => {
                         >
                             Supplier {getSortIndicator('supplier')}
                         </th>
-                        <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                    {currentItems.map((product) => (
-                        <tr key={product.productId} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                    {product.productName}
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                    {product.price} {product.currency}
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStockStatusColor(product.stock)}`}>
-                                        {product.stock}
-                                    </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {product.size}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {product.supplier}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <Link
-                                    to={`/admin/products/edit/${product.productId}`}
-                                    className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                >
-                                    Edit
-                                </Link>
-                                <Link
-                                    to={`/admin/products/${product.productId}/images`}
-                                    className="text-green-600 hover:text-green-900"
-                                >
-                                    Images
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
+                    {currentItems.map((product, index) => {
+                        const defaultVariant = getDefaultVariant(product);
+                        const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                        return (
+                            <tr key={`${product.productName}-${index}`} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="h-16 w-16 bg-gray-100 rounded overflow-hidden">
+                                        {primaryImage ? (
+                                            <img
+                                                src={getImageUrl(primaryImage.imageUrl)}
+                                                alt={primaryImage.altText || product.productName}
+                                                className="h-full w-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.src = getPlaceholderUrl();
+                                                }}
+                                            />
+                                        ) : (
+                                            <img
+                                                src={getPlaceholderUrl()}
+                                                alt={product.productName}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                        {product.productName}
+                                    </div>
+                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                        {product.description}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-900">
+                                        {product.price} {product.currency}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex flex-wrap gap-1">
+                                        {product.availableSizes.map(size => {
+                                            const variant = product.sizeVariants.find(v => v.size === size);
+                                            const isInStock = variant && variant.stock > 0;
+                                            return (
+                                                <span
+                                                    key={size}
+                                                    className={`text-xs px-2 py-1 rounded ${
+                                                        isInStock
+                                                            ? 'bg-blue-100 text-blue-800'
+                                                            : 'bg-gray-100 text-gray-400 line-through'
+                                                    }`}
+                                                >
+                                                        {size}
+                                                    </span>
+                                            );
+                                        })}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStockStatusColor(product.totalStock)}`}>
+                                            {product.totalStock}
+                                        </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {product.supplier}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <Link
+                                        to={`/admin/products/edit/${defaultVariant.productId}`}
+                                        state={{ groupedProduct: product }}
+                                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <Link
+                                        to={`/admin/products/${defaultVariant.productId}/images`}
+                                        state={{ groupedProduct: product }}
+                                        className="text-green-600 hover:text-green-900"
+                                    >
+                                        Images
+                                    </Link>
+                                </td>
+                            </tr>
+                        );
+                    })}
                     </tbody>
                 </table>
             </div>
@@ -193,7 +247,7 @@ const ProductsTable = ({ products }) => {
                             </p>
                         </div>
                         <div>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                 <button
                                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
@@ -236,4 +290,4 @@ const ProductsTable = ({ products }) => {
     );
 };
 
-export default ProductsTable;
+export default GroupedProductsTable;
