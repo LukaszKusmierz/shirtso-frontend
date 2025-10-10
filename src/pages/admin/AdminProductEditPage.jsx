@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import { updateProduct, getSizes, getGroupedProductByVariantId } from '../../services/ProductService';
-import { getAllCategories, getSubcategoriesByCategory } from '../../services/CategoryService';
+import { getAllCategoriesWithSubcategories, getSubcategoriesByCategory } from '../../services/CategoryService';
 import Spinner from '../../components/common/Spinner';
 import Alert from '../../components/common/Alert';
 import EditGroupedProductForm from '../../components/admin/EditGroupedProductForm';
@@ -39,7 +39,7 @@ const AdminProductEditPage = () => {
                 }
 
                 const [categoriesData, sizesData] = await Promise.all([
-                    getAllCategories(),
+                    getAllCategoriesWithSubcategories(),
                     getSizes()
                 ]);
 
@@ -58,7 +58,7 @@ const AdminProductEditPage = () => {
         fetchData();
     }, [id, groupedProduct]);
 
-    const handleCategoryChange = async (categoryId) => {
+    const handleCategoryChange = useCallback(async (categoryId) => {
         if (!categoryId) {
             setSubcategories([]);
             return;
@@ -67,11 +67,13 @@ const AdminProductEditPage = () => {
         try {
             const subcategoriesData = await getSubcategoriesByCategory(categoryId);
             setSubcategories(subcategoriesData);
+            return subcategoriesData;
         } catch (err) {
             console.error('Failed to load subcategories:', err);
             setError('Failed to load subcategories');
+            return [];
         }
-    };
+    }, []);
 
     const handleUpdateProducts = async (updates) => {
         try {
@@ -84,7 +86,8 @@ const AdminProductEditPage = () => {
 
             await Promise.all(updatePromises);
 
-            setSuccessMessage(`Successfully updated all ${updates.length} product variants!`);
+            const variantWord = updates.length === 1 ? 'variant' : 'variants';
+            setSuccessMessage(`Successfully updated ${updates.length} product ${variantWord}!`);
 
             setTimeout(() => {
                 navigate('/admin/products');

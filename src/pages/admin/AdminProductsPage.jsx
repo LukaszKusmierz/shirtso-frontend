@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import { addNewProduct, getSizes } from '../../services/ProductService';
-import { getAllCategories, getSubcategoriesByCategory } from '../../services/CategoryService';
+import { getAllCategoriesWithSubcategories, getSubcategoriesByCategory } from '../../services/CategoryService';
 import { getAllGroupedProducts } from '../../services/ProductService';
 import Spinner from '../../components/common/Spinner';
 import Alert from '../../components/common/Alert';
@@ -33,7 +33,7 @@ const AdminProductsPage = () => {
                 setLoading(true);
                 const [productsData, categoriesData, sizesData] = await Promise.all([
                     getAllGroupedProducts(),
-                    getAllCategories(),
+                    getAllCategoriesWithSubcategories(),
                     getSizes()
                 ]);
                 setGroupedProducts(productsData);
@@ -51,7 +51,7 @@ const AdminProductsPage = () => {
         fetchData();
     }, []);
 
-    const handleCategoryChange = async (categoryId) => {
+    const handleCategoryChange = useCallback(async (categoryId) => {
         if (!categoryId) {
             setSubcategories([]);
             return;
@@ -64,7 +64,7 @@ const AdminProductsPage = () => {
             console.error('Failed to load subcategories:', err);
             setError('Failed to load subcategories');
         }
-    };
+    }, []);
 
     const handleCreateProduct = async (productData) => {
         try {

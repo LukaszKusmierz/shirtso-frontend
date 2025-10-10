@@ -15,20 +15,24 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
     });
 
     const [sizeStocks, setSizeStocks] = useState({});
+    const [originalSizeStocks, setOriginalSizeStocks] = useState({});
+    const [originalFormData, setOriginalFormData] = useState({});
     const [categoryId, setCategoryId] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (groupedProduct) {
-            setFormData({
+        const initializeForm = async () => {
+            if (!groupedProduct || categories.length === 0) return;
+
+            const initialFormData = {
                 productName: groupedProduct.productName || '',
                 description: groupedProduct.description || '',
                 price: groupedProduct.price || '',
                 currency: groupedProduct.currency || 'PLN',
                 subcategoryId: groupedProduct.sizeVariants?.[0]?.subcategoryId || '',
                 supplier: groupedProduct.supplier || ''
-            });
+            };
 
             // Initialize size stocks
             const stocks = {};
@@ -39,20 +43,35 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
                 };
             });
             setSizeStocks(stocks);
+            setOriginalSizeStocks(JSON.parse(JSON.stringify(stocks)));
 
-            // Find and set category
-            if (groupedProduct.sizeVariants?.[0]?.subcategoryId && categories.length > 0) {
-                const subcatId = groupedProduct.sizeVariants[0].subcategoryId;
+            // Find and set category, then load subcategories
+            if (initialFormData.subcategoryId && categories.length > 0) {
+                const subcatId = Number(initialFormData.subcategoryId);
+
+                // Find the category that contains this subcategory
                 const category = categories.find(cat =>
-                    cat.subcategoryId === subcatId ||
-                    (cat.subcategories && cat.subcategories.some(sub => sub.subcategoryId === subcatId))
+                        cat.subcategories && cat.subcategories.some(sub =>
+                            Number(sub.subcategoryId) === subcatId
+                        )
                 );
+
                 if (category) {
+                    console.log('Found category:', category.categoryName, 'for subcategory:', subcatId);
                     setCategoryId(category.categoryId);
-                    onCategoryChange(category.categoryId);
+                    // Load subcategories before setting original form data
+                    await onCategoryChange(category.categoryId);
+                } else {
+                    console.warn('Could not find category for subcategoryId:', subcatId);
                 }
             }
-        }
+
+            // Set form data and original form data AFTER category/subcategories are loaded
+            setFormData(initialFormData);
+            setOriginalFormData(initialFormData);
+        };
+
+        initializeForm();
     }, [groupedProduct, categories, onCategoryChange]);
 
     const validateForm = () => {
@@ -99,14 +118,47 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
         setIsSubmitting(true);
 
         try {
-            // Prepare updates for all variants
-            const updates = Object.entries(sizeStocks).map(([size, data]) => ({
-                productId: data.productId,
-                size,
-                stock: data.stock,
-                ...formData,
-                price: parseFloat(formData.price)
-            }));
+            // Check if common fields changed
+            const commonFieldsChanged =
+                formData.productName !== originalFormData.productName ||
+                formData.description !== originalFormData.description ||
+                parseFloat(formData.price) !== parseFloat(originalFormData.price) ||
+                formData.currency !== originalFormData.currency ||
+                Number(formData.subcategoryId) !== Number(originalFormData.subcategoryId) ||
+                formData.supplier !== originalFormData.supplier;
+
+            console.log('Common fields changed:', commonFieldsChanged);
+            console.log('Form data:', formData);
+            console.log('Original form data:', originalFormData);
+
+            // Prepare updates only for changed variants
+            const updates = [];
+
+            Object.entries(sizeStocks).forEach(([size, data]) => {
+                const originalStock = originalSizeStocks[size]?.stock;
+                const stockChanged = data.stock !== originalStock;
+
+                console.log(`Size ${size}: stock=${data.stock}, original=${originalStock}, changed=${stockChanged}`);
+
+                // Update if common fields changed OR this variant's stock changed
+                if (commonFieldsChanged || stockChanged) {
+                    updates.push({
+                        productId: data.productId,
+                        size,
+                        stock: data.stock,
+                        ...formData,
+                        price: parseFloat(formData.price)
+                    });
+                }
+            });
+
+            console.log(`Updates to send: ${updates.length} variants`);
+
+            if (updates.length === 0) {
+                console.log('No changes detected');
+                setIsSubmitting(false);
+                return;
+            }
 
             await onSubmit(updates);
         } finally {
@@ -130,7 +182,7 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
                 <p className="text-sm text-blue-800">
                     <strong>Note:</strong> Changes to product name, description, price, category, and supplier will apply to all {Object.keys(sizeStocks).length} size variants.
-                    Stock levels can be managed individually per size.
+                    Stock levels can be managed individually per size. Only changed variants will be updated.
                 </p>
             </div>
 
