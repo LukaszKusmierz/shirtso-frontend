@@ -8,9 +8,10 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Shirtso</h3>
-                        <p className="text-gray-300">
-                            Najlepsza moda męska w jednym miejscu. SHIRTSO Cię ubierze!
-                        </p>
+                        <div className="text-gray-300 space-y-1">
+                            <p>We will dress you up!</p>
+                            <p>The best men's fashion in one place.</p>
+                        </div>
                     </div>
 
                     <div>

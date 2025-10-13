@@ -4,12 +4,13 @@ import { validate } from '../../utils/Helpers';
 
 const currencies = ['PLN', 'EUR', 'USD', 'GBP'];
 
-const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, sizes, onCategoryChange, onSubmit, onCancel }) => {
+const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, onCategoryChange, onSubmit, onCancel }) => {
     const [formData, setFormData] = useState({
         productName: '',
         description: '',
         price: '',
         currency: 'PLN',
+        categoryId: '',
         subcategoryId: '',
         supplier: ''
     });
@@ -20,55 +21,52 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
     const [categoryId, setCategoryId] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const initializeForm = async () => {
             if (!groupedProduct || categories.length === 0) return;
 
-            const initialFormData = {
-                productName: groupedProduct.productName || '',
-                description: groupedProduct.description || '',
-                price: groupedProduct.price || '',
-                currency: groupedProduct.currency || 'PLN',
-                subcategoryId: groupedProduct.sizeVariants?.[0]?.subcategoryId || '',
-                supplier: groupedProduct.supplier || ''
-            };
+            setIsLoading(true);
 
-            // Initialize size stocks
-            const stocks = {};
-            groupedProduct.sizeVariants?.forEach(variant => {
-                stocks[variant.size] = {
-                    stock: variant.stock,
-                    productId: variant.productId
+            try {
+                const initialFormData = {
+                    productName: groupedProduct.productName || '',
+                    description: groupedProduct.description || '',
+                    price: groupedProduct.price || '',
+                    currency: groupedProduct.currency || 'PLN',
+                    categoryId: groupedProduct.categoryId || '',
+                    subcategoryId: groupedProduct.subcategoryId || '',
+                    supplier: groupedProduct.supplier || ''
                 };
-            });
-            setSizeStocks(stocks);
-            setOriginalSizeStocks(JSON.parse(JSON.stringify(stocks)));
 
-            // Find and set category, then load subcategories
-            if (initialFormData.subcategoryId && categories.length > 0) {
-                const subcatId = Number(initialFormData.subcategoryId);
+                // Initialize size stocks
+                const stocks = {};
+                groupedProduct.sizeVariants?.forEach(variant => {
+                    stocks[variant.size] = {
+                        stock: variant.stock,
+                        productId: variant.productId
+                    };
+                });
+                setSizeStocks(stocks);
+                setOriginalSizeStocks(JSON.parse(JSON.stringify(stocks)));
 
-                // Find the category that contains this subcategory
-                const category = categories.find(cat =>
-                        cat.subcategories && cat.subcategories.some(sub =>
-                            Number(sub.subcategoryId) === subcatId
-                        )
-                );
-
-                if (category) {
-                    console.log('Found category:', category.categoryName, 'for subcategory:', subcatId);
-                    setCategoryId(category.categoryId);
-                    // Load subcategories before setting original form data
-                    await onCategoryChange(category.categoryId);
-                } else {
-                    console.warn('Could not find category for subcategoryId:', subcatId);
+                // Use categoryId directly from groupedProduct
+                if (initialFormData.categoryId) {
+                    const catId = String(initialFormData.categoryId);
+                    setCategoryId(catId);
+                    // Load subcategories for this category
+                    await onCategoryChange(initialFormData.categoryId);
                 }
-            }
 
-            // Set form data and original form data AFTER category/subcategories are loaded
-            setFormData(initialFormData);
-            setOriginalFormData(initialFormData);
+                // Set form data and original form data AFTER subcategories are loaded
+                setFormData(initialFormData);
+                setOriginalFormData(initialFormData);
+            } catch (error) {
+                console.error('Error initializing form:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         initializeForm();
@@ -127,18 +125,12 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
                 Number(formData.subcategoryId) !== Number(originalFormData.subcategoryId) ||
                 formData.supplier !== originalFormData.supplier;
 
-            console.log('Common fields changed:', commonFieldsChanged);
-            console.log('Form data:', formData);
-            console.log('Original form data:', originalFormData);
-
             // Prepare updates only for changed variants
             const updates = [];
 
             Object.entries(sizeStocks).forEach(([size, data]) => {
                 const originalStock = originalSizeStocks[size]?.stock;
                 const stockChanged = data.stock !== originalStock;
-
-                console.log(`Size ${size}: stock=${data.stock}, original=${originalStock}, changed=${stockChanged}`);
 
                 // Update if common fields changed OR this variant's stock changed
                 if (commonFieldsChanged || stockChanged) {
@@ -152,8 +144,6 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
                 }
             });
 
-            console.log(`Updates to send: ${updates.length} variants`);
-
             if (updates.length === 0) {
                 console.log('No changes detected');
                 setIsSubmitting(false);
@@ -161,10 +151,22 @@ const EditGroupedProductForm = ({ groupedProduct, categories, subcategories, siz
             }
 
             await onSubmit(updates);
+        } catch (error) {
+            console.error('Error submitting form:', error);
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-8">
+                    <p className="text-gray-600">Loading product data...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">

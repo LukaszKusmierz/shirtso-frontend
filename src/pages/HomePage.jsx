@@ -53,13 +53,13 @@ const HomePage = () => {
             {/* Hero Section */}
             <section className="mb-12">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-10 rounded-lg shadow-md">
-                    <h1 className="text-4xl font-bold mb-4">Witamy w Shirtso</h1>
-                    <p className="text-xl mb-6">Tu zrobisz udane zakupy</p>
+                    <h1 className="text-4xl font-bold mb-4">Welcome to Shirtso</h1>
+                    <p className="text-xl mb-6">Here you can enjoy a successful shopping experience.</p>
                     <Link
                         to="/products"
                         className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
                     >
-                        Asortyment
+                        Products
                     </Link>
                 </div>
             </section>
