@@ -1,7 +1,7 @@
 export const getStockStatusColor = (stock) => {
-    if (stock === 0) return 'bg-red-100 text-red-800';
-    if (stock < 3) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
+    if (stock > 0 && stock < 3) return 'text-red-500 font-medium';
+    if (stock > 3 && stock < 10) return 'text-yellow-500 font-medium';
+    return 'text-green-500 font-medium';
 };
 
 export const getImageUrl = (imagePath) => {
@@ -62,84 +62,3 @@ export const validate = (formData, categoryId) => {
     return Object.keys(tempErrors).length === 0;
 };
 
-export const groupProducts = (products) => {
-    const groups = {};
-
-    products.forEach(product => {
-        // Create a unique key for each product group
-        const key = `${product.productName}-${product.description}-${product.supplier}`;
-
-        if (!groups[key]) {
-            groups[key] = {
-                groupId: key,
-                productName: product.productName,
-                description: product.description,
-                supplier: product.supplier,
-                currency: product.currency,
-                variants: [],
-                images: product.images || [],
-                minPrice: product.price,
-                maxPrice: product.price,
-                totalStock: 0,
-                availableSizes: []
-            };
-        }
-
-        groups[key].variants.push({
-            productId: product.productId,
-            size: product.size,
-            price: product.price,
-            stock: product.stock,
-            currency: product.currency,
-            subcategoryId: product.subcategoryId
-        });
-
-        groups[key].minPrice = Math.min(groups[key].minPrice, product.price);
-        groups[key].maxPrice = Math.max(groups[key].maxPrice, product.price);
-        groups[key].totalStock += product.stock;
-
-        if (!groups[key].availableSizes.includes(product.size)) {
-            groups[key].availableSizes.push(product.size);
-        }
-
-        if ((!groups[key].images || groups[key].images.length === 0) &&
-            product.images && product.images.length > 0) {
-            groups[key].images = product.images;
-        }
-    });
-
-    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-
-    return Object.values(groups).map(group => ({
-        ...group,
-        variants: group.variants.sort((a, b) =>
-            sizeOrder.indexOf(a.size) - sizeOrder.indexOf(b.size)
-        ),
-        availableSizes: group.availableSizes.sort((a, b) =>
-            sizeOrder.indexOf(a) - sizeOrder.indexOf(b)
-        )
-    }));
-};
-
-export const getDefaultVariant = (productGroup) => {
-    if (!productGroup || !productGroup.variants || productGroup.variants.length === 0) {
-        return null;
-    }
-
-    const inStockVariant = productGroup.variants.find(v => v.stock > 0);
-    return inStockVariant || productGroup.variants[0];
-};
-
-export const getVariantBySize = (productGroup, size) => {
-    if (!productGroup || !productGroup.variants) {
-        return null;
-    }
-    return productGroup.variants.find(v => v.size === size);
-};
-
-export const formatPriceRange = (minPrice, maxPrice, currency) => {
-    if (minPrice === maxPrice) {
-        return `${minPrice} ${currency}`;
-    }
-    return `${minPrice} - ${maxPrice} ${currency}`;
-};

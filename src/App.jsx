@@ -16,7 +16,7 @@ import OrderDetailPage from './pages/OrderDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductEditPage from './pages/admin/AdminProductEditPage';
-import AdminProductImagePage from './pages/admin/AdminProductImagePage';
+import AdminGroupedProductImagePage from './pages/admin/AdminGroupedProductImagePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const ProtectedRoute = ({ children }) => {
@@ -97,7 +97,7 @@ const App = () => {
                         } />
                         <Route path="/admin/products/:id/images" element={
                             <AdminRoute>
-                                <AdminProductImagePage />
+                                <AdminGroupedProductImagePage />
                             </AdminRoute>
                         } />
                         <Route path="*" element={<NotFoundPage />} />
