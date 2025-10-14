@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
+import Alert from '../common/Alert';
 
 const LoginForm = () => {
+    const location = useLocation();
     const [credentials, setCredentials] = useState({
         username: '',
         password: '',
@@ -11,6 +13,9 @@ const LoginForm = () => {
     const [error, setError] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const successMessage = location.state?.message;
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials((prev) => ({
@@ -18,6 +23,7 @@ const LoginForm = () => {
             [name]: value,
         }));
     };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -37,10 +43,23 @@ const LoginForm = () => {
         <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold mb-6 text-center">Login to Your Account</h2>
 
+            {successMessage && (
+                <Alert
+                    type="success"
+                    message={successMessage}
+                    dismissible={true}
+                    className="mb-4"
+                />
+            )}
+
             {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-                    {error}
-                </div>
+                <Alert
+                    type="error"
+                    message={error}
+                    dismissible={true}
+                    onDismiss={() => setError(null)}
+                    className="mb-4"
+                />
             )}
 
             <form onSubmit={handleSubmit}>
@@ -59,7 +78,7 @@ const LoginForm = () => {
                     />
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-4">
                     <label className="block text-gray-700 mb-2" htmlFor="password">
                         Password
                     </label>
@@ -72,6 +91,15 @@ const LoginForm = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                         required
                     />
+                </div>
+
+                <div className="mb-6 text-right">
+                    <Link
+                        to="/forgot-password"
+                        className="text-sm text-blue-600 hover:underline"
+                    >
+                        Forgot Password?
+                    </Link>
                 </div>
 
                 <button
@@ -88,9 +116,9 @@ const LoginForm = () => {
             <div className="mt-4 text-center">
                 <p>
                     Don't have an account?{' '}
-                    <a href="/register" className="text-blue-600 hover:underline">
+                    <Link to="/register" className="text-blue-600 hover:underline">
                         Register here
-                    </a>
+                    </Link>
                 </p>
             </div>
         </div>
