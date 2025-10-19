@@ -1,51 +1,8 @@
-import React, {useState, useEffect, useCallback} from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/UseAuth';
-import { getCart } from '../../services/CartService';
-import CartEventService from "../../services/CartEventService";
+import { useCart } from '../../context/CartContext';
 
 const CartIcon = () => {
-    const [cartItems, setCartItems] = useState(0);
-    const [hasInteracted, setHasInteracted] = useState(
-        localStorage.getItem('hasCartInteraction') === 'true'
-    );
-    const { currentUser } = useAuth();
-    const fetchCartItems = useCallback(async () => {
-        if (!currentUser) {
-            setCartItems(0);
-            return;
-        }
-        if (!hasInteracted && !localStorage.getItem('hasCartInteraction')) {
-            return;
-        }
-
-        try {
-            const cart = await getCart();
-            setCartItems(cart.totalItems || 0);
-            if (cart.totalItems > 0 && !hasInteracted) {
-                localStorage.setItem('hasCartInteraction', 'true');
-                setHasInteracted(true);
-            }
-        } catch (err) {
-            console.error('Failed to fetch cart:', err);
-        }
-    }, [currentUser, hasInteracted]);
-
-    useEffect(() => {
-        if (hasInteracted) {
-            fetchCartItems();
-        }
-
-        const unsubscribe = CartEventService.subscribe(() => {
-            localStorage.setItem('hasCartInteraction', 'true');
-            setHasInteracted(true);
-            fetchCartItems();
-        });
-
-        return () => {
-            unsubscribe();
-        };
-    }, [fetchCartItems, hasInteracted]);
+    const { cartItems } = useCart();
 
     return (
         <Link to="/cart" className="relative inline-flex items-center p-2">

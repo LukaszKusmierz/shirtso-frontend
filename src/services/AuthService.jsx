@@ -17,3 +17,23 @@ export const getCurrentUser = async () => {
         return null;
     }
 };
+
+export const forgotPassword = async (email) => {
+    return api.post('/auth/forgot-password', { email });
+};
+
+export const resetPassword = async (token, newPassword) => {
+    return api.post('/auth/reset-password', { token, newPassword });
+};
+
+export const validateResetToken = async (token) => {
+    return api.get(`/auth/validate-token/${token}`);
+};
+
+export const logout = async () => {
+    return api.post('/auth/logout');
+};
+
+export const changePassword = async (passwordData) => {
+    return api.post('/auth/change-password', passwordData);
+};
