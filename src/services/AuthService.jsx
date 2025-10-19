@@ -33,4 +33,7 @@ export const validateResetToken = async (token) => {
 export const logout = async () => {
     return api.post('/auth/logout');
 };
-//TODO: podepnij logout do backend'u
+
+export const changePassword = async (passwordData) => {
+    return api.post('/auth/change-password', passwordData);
+};

@@ -46,7 +46,7 @@ const Footer = () => {
                             <p>123 Fashion Street</p>
                             <p>Style City, SC 12345</p>
                             <p>Email: info@shirtso.com</p>
-                            <p>Phone: (123) 456-7890</p>
+                            <p>Phone: +1 (234) 567-890</p>
                         </address>
                     </div>
                 </div>

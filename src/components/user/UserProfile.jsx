@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/UseAuth';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
 
 const UserProfile = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
 
@@ -100,6 +102,7 @@ const UserProfile = () => {
                     <Button
                         variant="outline"
                         fullWidth
+                        onClick={() => navigate('/change-password')}
                     >
                         Change Password
                     </Button>
