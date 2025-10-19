@@ -1,5 +1,5 @@
 export const getStockStatusColor = (stock) => {
-    if (stock > 0 && stock < 3) return 'text-red-500 font-medium';
+    if (stock > 0 && stock <= 3) return 'text-red-500 font-medium';
     if (stock > 3 && stock < 10) return 'text-yellow-500 font-medium';
     return 'text-green-500 font-medium';
 };
