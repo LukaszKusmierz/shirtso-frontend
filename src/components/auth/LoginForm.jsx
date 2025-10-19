@@ -13,7 +13,6 @@ const LoginForm = () => {
     const [error, setError] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
-
     const successMessage = location.state?.message;
 
     const handleChange = (e) => {
