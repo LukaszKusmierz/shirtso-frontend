@@ -5,7 +5,7 @@ import Button from '../common/Button';
 const CartSummary = ({ cart, onClearCart }) => {
     const navigate = useNavigate();
     if (!cart) return null;
-    const { totalAmount, totalItems } = cart;
+    const { totalAmount, totalItems, currency } = cart;
     const handleCheckout = () => {
         if (totalItems === 0) {
             return;
@@ -19,7 +19,7 @@ const CartSummary = ({ cart, onClearCart }) => {
             <div className="border-t border-b py-4 mb-4">
                 <div className="flex justify-between mb-2">
                     <span>Items ({totalItems}):</span>
-                    <span>{totalAmount} PLN</span>
+                    <span>{totalAmount} {currency}</span>
                 </div>
                 <div className="flex justify-between mb-2">
                     <span>Shipping:</span>
@@ -29,7 +29,7 @@ const CartSummary = ({ cart, onClearCart }) => {
 
             <div className="flex justify-between mb-4 font-semibold text-lg">
                 <span>Total:</span>
-                <span>{totalAmount} PLN</span>
+                <span>{totalAmount} {currency}</span>
             </div>
 
             <div className="space-y-3">
