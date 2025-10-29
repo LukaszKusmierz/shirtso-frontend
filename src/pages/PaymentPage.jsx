@@ -386,7 +386,7 @@ const PaymentPage = () => {
                                         disabled={submitting}
                                         loading={submitting}
                                     >
-                                        {submitting ? 'Processing...' : `Pay ${displayTotal} PLN`}
+                                        {submitting ? 'Processing...' : `Pay ${displayTotal} EUR`}
                                     </Button>
                                 </div>
                             </form>
@@ -408,25 +408,25 @@ const PaymentPage = () => {
                                 </div>
                                 <div className="flex justify-between py-1">
                                     <span>Subtotal:</span>
-                                    <span>{subtotal || order.totalAmount} PLN</span>
+                                    <span>{subtotal || order.totalAmount} EUR</span>
                                 </div>
                                 {shippingCost > 0 && (
                                     <div className="flex justify-between py-1">
                                         <span>Shipping:</span>
-                                        <span>{shippingCost} PLN</span>
+                                        <span>{shippingCost} EUR</span>
                                     </div>
                                 )}
                                 {discount > 0 && (
                                     <div className="flex justify-between py-1 text-green-600">
                                         <span>Discount:</span>
-                                        <span>-{discount} PLN</span>
+                                        <span>-{discount} EUR</span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="flex justify-between text-lg font-semibold">
                                 <span>Total:</span>
-                                <span>{displayTotal} PLN</span>
+                                <span>{displayTotal} EUR</span>
                             </div>
                         </div>
 
