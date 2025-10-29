@@ -5,7 +5,8 @@ import Button from '../common/Button';
 const CartSummary = ({ cart, onClearCart }) => {
     const navigate = useNavigate();
     if (!cart) return null;
-    const { totalAmount, totalItems, currency } = cart;
+    const { totalAmount, totalItems, items } = cart;
+    const currency = items?.[0]?.product?.currency || '';
     const handleCheckout = () => {
         if (totalItems === 0) {
             return;
