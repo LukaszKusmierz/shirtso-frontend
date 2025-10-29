@@ -24,6 +24,7 @@ const CheckoutPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const subtotal = cart?.totalAmount || 0;
+    const currency = cart?.currency || '';
     const shippingCost = selectedShippingMethod?.price || 0;
     const discount = discountAmount || 0;
     const total = Math.round((subtotal + shippingCost - discount) * 100) / 100;
@@ -183,32 +184,32 @@ const CheckoutPage = () => {
                                                     <span className="font-medium">{item.product.productName}</span>
                                                     <span className="text-gray-600 block">Qty: {item.quantity}</span>
                                                 </div>
-                                                <span>{item.totalAmount} PLN</span>
+                                                <span>{item.totalAmount} {currency}</span>
                                             </div>
                                         ))}
                                     </div>
 
                                     <div className="flex justify-between mt-4">
                                         <span>Items ({cart.totalItems}):</span>
-                                        <span>{subtotal} PLN</span>
+                                        <span>{subtotal} {currency}</span>
                                     </div>
 
                                     <div className="flex justify-between">
                                         <span>Shipping:</span>
-                                        <span>{shippingCost > 0 ? `${shippingCost} PLN` : 'Free'}</span>
+                                        <span>{shippingCost > 0 ? `${shippingCost} {currency}` : 'Free'}</span>
                                     </div>
 
                                     {discount > 0 && (
                                         <div className="flex justify-between text-green-600">
                                             <span>Discount:</span>
-                                            <span>-{discount} PLN</span>
+                                            <span>-{discount} {currency}</span>
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="flex justify-between text-lg font-semibold mb-6">
                                     <span>Total:</span>
-                                    <span>{displayTotal} PLN</span>
+                                    <span>{displayTotal} {currency}</span>
                                 </div>
 
                                 <Button
