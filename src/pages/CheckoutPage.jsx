@@ -24,7 +24,7 @@ const CheckoutPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const subtotal = cart?.totalAmount || 0;
-    const currency = cart?.currency || '';
+    const currency = cart?.items?.[0]?.product?.currency || '';
     const shippingCost = selectedShippingMethod?.price || 0;
     const discount = discountAmount || 0;
     const total = Math.round((subtotal + shippingCost - discount) * 100) / 100;
