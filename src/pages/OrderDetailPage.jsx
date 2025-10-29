@@ -184,16 +184,16 @@ const OrderDetailPage = () => {
                                             {item.productName}
                                         </Link>
                                     </div>
-                                    <div className="w-1/5 text-center">{item.price} PLN</div>
+                                    <div className="w-1/5 text-center">{item.price} EUR</div>
                                     <div className="w-1/5 text-center">{item.quantity}</div>
-                                    <div className="w-1/5 text-right">{item.total} PLN</div>
+                                    <div className="w-1/5 text-right">{item.total} EUR</div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="mt-4 text-right">
                             <div className="text-lg font-semibold">
-                                Total: {order.totalAmount} PLN
+                                Total: {order.totalAmount} EUR
                             </div>
                         </div>
                     </div>
