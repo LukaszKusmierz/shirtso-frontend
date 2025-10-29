@@ -196,7 +196,7 @@ const CheckoutPage = () => {
 
                                     <div className="flex justify-between">
                                         <span>Shipping:</span>
-                                        <span>{shippingCost > 0 ? `${shippingCost} {currency}` : 'Free'}</span>
+                                        <span>{shippingCost > 0 ? `${shippingCost} ${currency}` : 'Free'}</span>
                                     </div>
 
                                     {discount > 0 && (
