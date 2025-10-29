@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import GroupedProductDetails from '../components/products/GroupedProductDetails';
-import { getGroupedProductByVariantId } from '../services/ProductService';
+import {getGroupedProductByVariantId, getProductWithImages} from '../services/ProductService';
 import Spinner from '../components/common/Spinner';
 import Alert from '../components/common/Alert';
 
@@ -27,7 +27,7 @@ const ProductDetailPage = () => {
                 }
 
                 // Otherwise, fetch from backend using the variant ID
-                const data = await getGroupedProductByVariantId(id);
+                const data = await getProductWithImages(id);
                 setGroupedProduct(data);
             } catch (err) {
                 setError('Failed to load product');

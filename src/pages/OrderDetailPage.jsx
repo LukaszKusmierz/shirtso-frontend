@@ -183,6 +183,7 @@ const OrderDetailPage = () => {
                                         <Link to={`/products/${item.productId}`} className="font-medium hover:text-blue-600">
                                             {item.productName}
                                         </Link>
+                                        console.log(item.productId);
                                     </div>
                                     <div className="w-1/5 text-center">{item.price} EUR</div>
                                     <div className="w-1/5 text-center">{item.quantity}</div>
