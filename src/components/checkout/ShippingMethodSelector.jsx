@@ -78,7 +78,7 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
                         <div className="ml-3">
                             <div className="flex justify-between w-full">
                                 <span className="font-medium">{method.name}</span>
-                                <span className="font-medium">{method.price} PLN</span>
+                                <span className="font-medium">{method.price} EUR</span>
                             </div>
                             <p className="text-sm text-gray-600">{method.description}</p>
                             <p className="text-sm text-gray-600">
