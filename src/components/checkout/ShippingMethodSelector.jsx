@@ -93,3 +93,6 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
 };
 
 export default ShippingMethodSelector;
+
+//TODO: fix currency
+
