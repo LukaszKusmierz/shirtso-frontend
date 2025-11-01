@@ -14,6 +14,7 @@ import {
 import Spinner from '../common/Spinner';
 import Alert from '../common/Alert';
 import Button from '../common/Button';
+import UnsplashImagePicker from '../unsplash/UnsplashImagePicker';
 import { getImageUrl, getPlaceholderUrl } from '../../utils/Helpers';
 
 const GroupedProductImageManagement = () => {
@@ -26,6 +27,7 @@ const GroupedProductImageManagement = () => {
     const [newImageAlt, setNewImageAlt] = useState('');
     const [displayOrder, setDisplayOrder] = useState(0);
     const [isPrimary, setIsPrimary] = useState(false);
+    const [showUnsplashPicker, setShowUnsplashPicker] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
@@ -91,6 +93,31 @@ const GroupedProductImageManagement = () => {
 
         } catch (err) {
             setError('Failed to create image: ' + (err.message || 'Unknown error'));
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUnsplashImageSelect = async (imageData) => {
+        try {
+            setLoading(true);
+
+            // Create image from Unsplash data
+            const imagePayload = {
+                imageUrl: imageData.imageUrl,
+                altText: `${imageData.altText} - Photo by ${imageData.photographerName} on Unsplash`
+            };
+
+            const newImage = await createImage(imagePayload);
+
+            setSelectedImage(newImage.imageId);
+            setShowUnsplashPicker(false);
+            setSuccessMessage(`Image from Unsplash added successfully! Photo by ${imageData.photographerName}. Now associate it with the product.`);
+            setTimeout(() => setSuccessMessage(null), 5000);
+
+        } catch (err) {
+            setError('Failed to create image from Unsplash: ' + (err.message || 'Unknown error'));
             console.error(err);
         } finally {
             setLoading(false);
@@ -313,7 +340,7 @@ const GroupedProductImageManagement = () => {
                                             Order: {image.displayOrder}
                                         </p>
                                         {image.altText && (
-                                            <p className="text-xs text-gray-500 mb-2 truncate">
+                                            <p className="text-xs text-gray-500 mb-2 truncate" title={image.altText}>
                                                 Alt: {image.altText}
                                             </p>
                                         )}
@@ -344,56 +371,95 @@ const GroupedProductImageManagement = () => {
 
                 {/* Add Images Section */}
                 <div>
-                    {/* Create New Image */}
-                    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h2 className="text-xl font-semibold mb-4">Create & Add New Image</h2>
-                        <p className="text-sm text-gray-600 mb-4">
-                            This will add the image to all {groupedProduct.sizeVariants?.length || 0} variants of this product.
-                        </p>
+                    {/* Unsplash Image Picker */}
+                    {showUnsplashPicker ? (
+                        <div className="mb-6">
+                            <UnsplashImagePicker
+                                onImageSelect={handleUnsplashImageSelect}
+                                onCancel={() => setShowUnsplashPicker(false)}
+                                searchQuery={groupedProduct.productName}
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Create New Image or Use Unsplash */}
+                            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                                <h2 className="text-xl font-semibold mb-4">Add New Image</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    This will add the image to all {groupedProduct.sizeVariants?.length || 0} variants of this product.
+                                </p>
 
-                        <form onSubmit={handleCreateImage}>
-                            <div className="mb-4">
-                                <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Image URL *
-                                </label>
-                                <input
-                                    type="text"
-                                    id="imageUrl"
-                                    value={newImageUrl}
-                                    onChange={(e) => setNewImageUrl(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    placeholder="https://example.com/image.jpg or /static/products/image.jpg"
-                                    required
-                                />
+                                {/* Unsplash Button */}
+                                <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                                    <h3 className="font-semibold mb-2 text-purple-900">Find Images on Unsplash</h3>
+                                    <p className="text-sm text-gray-700 mb-3">
+                                        Search millions of high-quality, free-to-use product photos
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        onClick={() => setShowUnsplashPicker(true)}
+                                        className="w-full"
+                                    >
+                                        🔍 Browse Unsplash Photos
+                                    </Button>
+                                </div>
+
+                                <div className="relative my-4">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-gray-300"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-sm">
+                                        <span className="px-2 bg-white text-gray-500">Or add manually</span>
+                                    </div>
+                                </div>
+
+                                {/* Manual Image URL Form */}
+                                <form onSubmit={handleCreateImage}>
+                                    <div className="mb-4">
+                                        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Image URL *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="imageUrl"
+                                            value={newImageUrl}
+                                            onChange={(e) => setNewImageUrl(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            placeholder="https://example.com/image.jpg or /static/products/image.jpg"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label htmlFor="imageAlt" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Alt Text
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="imageAlt"
+                                            value={newImageAlt}
+                                            onChange={(e) => setNewImageAlt(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            placeholder="Description of the image"
+                                        />
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        disabled={loading || !newImageUrl.trim()}
+                                        loading={loading}
+                                    >
+                                        Create Image
+                                    </Button>
+                                </form>
                             </div>
-
-                            <div className="mb-4">
-                                <label htmlFor="imageAlt" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Alt Text
-                                </label>
-                                <input
-                                    type="text"
-                                    id="imageAlt"
-                                    value={newImageAlt}
-                                    onChange={(e) => setNewImageAlt(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    placeholder="Description of the image"
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                disabled={loading || !newImageUrl.trim()}
-                                loading={loading}
-                            >
-                                Create Image
-                            </Button>
-                        </form>
-                    </div>
+                        </>
+                    )}
 
                     {/* Associate Image Form */}
-                    {selectedImage && (
+                    {selectedImage && !showUnsplashPicker && (
                         <div className="bg-white p-6 rounded-lg shadow-md">
                             <h2 className="text-xl font-semibold mb-4">Associate Image with Product</h2>
 
