@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import GroupedProductDetails from '../components/products/GroupedProductDetails';
-import {getGroupedProductByVariantId, getProductWithImages} from '../services/ProductService';
+import { getProductWithImages} from '../services/ProductService';
 import Spinner from '../components/common/Spinner';
 import Alert from '../components/common/Alert';
 
