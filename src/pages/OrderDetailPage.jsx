@@ -290,3 +290,4 @@ const OrderDetailPage = () => {
 
 export default OrderDetailPage;
 
+//TODO: fix currency

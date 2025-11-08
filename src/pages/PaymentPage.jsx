@@ -451,3 +451,4 @@ const PaymentPage = () => {
 
 export default PaymentPage;
 
+//TODO: fix currency and when user go to payment site the order is being created - WRONG!
