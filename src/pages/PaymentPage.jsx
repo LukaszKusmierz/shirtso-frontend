@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/UseAuth';
 import { getOrderDetails } from '../services/OrderService';
@@ -48,15 +48,7 @@ const PaymentPage = () => {
         address
     } = checkoutDetails;
 
-    useEffect(() => {
-        if (!currentUser) {
-            navigate('/login', { state: { from: `/checkout/payment/${orderId}` } });
-            return;
-        }
-        fetchData();
-    }, [currentUser, orderId, navigate]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const [orderData, methods] = await Promise.all([
@@ -67,42 +59,33 @@ const PaymentPage = () => {
             setOrder(orderData);
             setPaymentMethods(methods);
 
-            // Check if order is already paid
             if (orderData.orderStatus !== 'NEW') {
-                // Try to get payment details
                 try {
-                    const paymentData = await getPaymentByOrderId(orderId);
-                    if (paymentData && paymentData.status === 'COMPLETED') {
-                        // Order already paid, redirect to order details
+                    const [paymentData, statusData] = await Promise.all([
+                        getPaymentByOrderId(orderId),
+                        checkPaymentStatus(orderId)
+                    ]);
+
+                    if ((statusData?.isPaid || paymentData?.status === 'COMPLETED')) {
                         navigate(`/orders/${orderId}`, {
                             state: { message: 'This order has already been paid.' }
                         });
                         return;
                     }
-                } catch (err) {
-                    console.log('Could not fetch payment details');
-                }
-            }
 
-            // Check for existing payment attempts
-            try {
-                const paymentStatus = await checkPaymentStatus(orderId);
-                if (paymentStatus.isPaid) {
-                    navigate(`/orders/${orderId}`, {
-                        state: { message: 'This order has already been paid.' }
-                    });
-                    return;
-                }
+                    if (paymentData) {
+                        setExistingPayment({
+                            ...paymentData,
+                            status: statusData?.status || paymentData.status
+                        });
 
-                const paymentData = await getPaymentByOrderId(orderId);
-                if (paymentData) {
-                    setExistingPayment(paymentData);
-                    if (paymentData.status === 'FAILED') {
-                        setError('Previous payment attempt failed. Please try again with valid payment details.');
+                        if (paymentData.status === 'FAILED') {
+                            setError('Previous payment attempt failed. Please try again with valid payment details.');
+                        }
                     }
+                } catch {
+                    console.log('No existing payment found or failed to check status');
                 }
-            } catch (err) {
-                console.log('No existing payment found');
             }
 
             setError(null);
@@ -112,7 +95,12 @@ const PaymentPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [orderId, navigate]);
+
+    useEffect(() => {
+        if (currentUser) fetchData();
+        else navigate('/login', { state: { from: `/checkout/payment/${orderId}` } });
+    }, [currentUser, orderId, navigate, fetchData]);
 
     const handlePaymentMethodChange = (e) => {
         setSelectedPaymentMethod(e.target.value);
@@ -152,10 +140,17 @@ const PaymentPage = () => {
             }
         } else if (name === 'expiryDate') {
             formattedValue = formatExpiryDate(value);
+            const [month, year] = formattedValue.split('/').map(Number);
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1;
+            const currentYear = currentDate.getFullYear() % 100;
+
             if (formattedValue && !formattedValue.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
                 if (formattedValue.length >= 5) {
                     newValidationErrors.expiryDate = 'Please enter a valid date (MM/YY)';
                 }
+            } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+                newValidationErrors.expiryDate = 'Card has expired';
             } else {
                 newValidationErrors.expiryDate = '';
             }
@@ -246,7 +241,7 @@ const PaymentPage = () => {
             const paymentResponse = await processPayment(paymentData);
 
             // Clear cart
-            CartEventService.emitCartChange();
+            await CartEventService.emitCartChange();
 
             // Clear form
             setCardDetails({
@@ -295,6 +290,7 @@ const PaymentPage = () => {
             }
 
             setError(errorMessage);
+        } finally {
             setSubmitting(false);
         }
     };
@@ -325,7 +321,7 @@ const PaymentPage = () => {
         );
     }
 
-    const displayTotal = total || order?.totalAmount || 0;
+    const displayTotal = total ?? order?.totalAmount ?? 0;
 
     return (
         <div className="container mx-auto p-4">
