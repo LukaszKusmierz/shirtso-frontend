@@ -19,6 +19,9 @@ const Header = () => {
                 setIsUserMenuOpen(false);
             }
 
+            const isHamburgerButton = event.target.closest('[data-menu-button]');
+            if (isHamburgerButton) return;
+
             if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
                 setIsMenuOpen(false);
             }
@@ -204,6 +207,7 @@ const Header = () => {
                         {currentUser && <CartIcon />}
 
                         <button
+                            data-menu-button
                             className="ml-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-1"
                             onClick={toggleMobileMenu}
                             aria-expanded={isMenuOpen}
