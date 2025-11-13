@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/UseAuth';
 import { getOrderDetails, cancelOrder } from '../services/OrderService';
@@ -17,7 +17,6 @@ const OrderDetailPage = () => {
     const { orderId } = useParams();
     const [order, setOrder] = useState(null);
     const [payment, setPayment] = useState(null);
-    const [paymentStatus, setPaymentStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
     const [retrying, setRetrying] = useState(false);
@@ -26,15 +25,7 @@ const OrderDetailPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!currentUser) {
-            navigate('/login', { state: { from: `/orders/${orderId}` } });
-            return;
-        }
-        fetchOrderAndPaymentDetails();
-    }, [currentUser, orderId, navigate]);
-
-    const fetchOrderAndPaymentDetails = async () => {
+    const fetchOrderAndPaymentDetails = useCallback(async () => {
         setLoading(true);
         try {
             const orderData = await getOrderDetails(orderId);
@@ -43,17 +34,13 @@ const OrderDetailPage = () => {
             // Fetch payment details if order is not NEW
             if (orderData.orderStatus !== 'NEW') {
                 try {
-                    const [paymentData, statusData] = await Promise.all([
-                        getPaymentByOrderId(orderId),
-                        checkPaymentStatus(orderId)
-                    ]);
+                    const paymentData = await getPaymentByOrderId(orderId);
+                    await checkPaymentStatus(orderId);
                     setPayment(paymentData);
-                    setPaymentStatus(statusData);
                 } catch (paymentError) {
                     console.log('No payment found for this order');
                 }
             }
-
             setError(null);
         } catch (err) {
             console.error('Failed to fetch order details:', err);
@@ -61,7 +48,15 @@ const OrderDetailPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [orderId]);
+
+    useEffect(() => {
+        if (!currentUser) {
+            navigate('/login', { state: { from: `/orders/${orderId}` } });
+            return;
+        }
+        fetchOrderAndPaymentDetails();
+    }, [currentUser, orderId, navigate, fetchOrderAndPaymentDetails]);
 
     const handleCancelOrder = async () => {
         if (!window.confirm('Are you sure you want to cancel this order?')) {
@@ -279,7 +274,7 @@ const OrderDetailPage = () => {
                                 <div>
                                     <span className="block text-sm text-gray-600">Payment Method</span>
                                     <span className="block font-medium">
-                                        {payment.paymentMethod.replace('_', ' ')}
+                                        {payment.paymentMethod?.replace('_', ' ') || 'N/A'}
                                     </span>
                                 </div>
                                 <div>
@@ -322,7 +317,7 @@ const OrderDetailPage = () => {
                                 <div className="w-1/5 text-right">Total</div>
                             </div>
 
-                            {order.items.map((item) => (
+                            {order.items?.map((item) => (
                                 <div key={item.orderItemId} className="flex py-3 border-t">
                                     <div className="w-2/5">
                                         <Link to={`/products/${item.productId}`} className="font-medium hover:text-blue-600">
