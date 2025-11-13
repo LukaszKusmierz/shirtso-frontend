@@ -65,8 +65,12 @@ const Header = () => {
 
     const toggleMobileMenu = (e) => {
         e.stopPropagation();
-        setIsMenuOpen(!isMenuOpen);
-        setIsUserMenuOpen(false);
+        setIsMenuOpen((prev) => {
+            if (prev) {
+                setIsUserMenuOpen(false);
+            }
+            return !prev;
+        });
     };
 
     return (
