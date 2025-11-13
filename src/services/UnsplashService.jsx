@@ -43,7 +43,7 @@ export const getRandomPhoto = async (query = null) => {
  */
 export const getPhotoById = async (photoId) => {
     try {
-        const data = await Api.get(`/unsplash/${photoId}`);
+        const data = await Api.get(`/unsplash/photos/${photoId}`);
         return data;
     } catch (error) {
         console.error('Failed to get photo details:', error);
@@ -58,7 +58,7 @@ export const getPhotoById = async (photoId) => {
  */
 export const downloadPhoto = async (photoId) => {
     try {
-        const data = await Api.post(`/unsplash/${photoId}/download`);
+        const data = await Api.post(`/unsplash/photos/${photoId}/save`);
         return data;
     } catch (error) {
         console.error('Failed to download photo:', error);
