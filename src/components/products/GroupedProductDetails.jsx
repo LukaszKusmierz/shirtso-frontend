@@ -137,9 +137,10 @@ const GroupedProductDetails = ({ groupedProduct }) => {
                                 onError={() => handleImageError(selectedImageIndex)}
                             />
                         ) : (
+                            // eslint-disable-next-line jsx-a11y/img-redundant-alt
                             <img
                                 src={getPlaceholderUrl()}
-                                alt="Product placeholder"
+                                alt="Product image unavailable"
                                 className="w-full h-full object-contain"
                             />
                         )}
