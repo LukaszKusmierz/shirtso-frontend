@@ -22,8 +22,10 @@ export const getImageUrl = (imagePath) => {
 };
 
 export const getPlaceholderUrl = () => {
-    const baseUrl = process.env.REACT_APP_STATIC_URL || '';
-    return `${baseUrl}/placeholder-product.png`;
+    const baseUrl = process.env.REACT_APP_STATIC_URL;
+    return baseUrl
+        ? `${baseUrl}/placeholder-product.png`
+        : "/placeholder-product.png";
 };
 
 export function formatMethodName(methodId) {
