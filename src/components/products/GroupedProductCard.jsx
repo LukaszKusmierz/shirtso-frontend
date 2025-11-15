@@ -41,7 +41,8 @@ const GroupedProductCard = ({ product }) => {
                         }}
                     />
                 ) : (
-                    <img src={getPlaceholderUrl()} alt="Product unavailable" />
+                    // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                    <img src={getPlaceholderUrl()} alt="Product image unavailable" />
                 )}
             </div>
 
