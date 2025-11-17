@@ -89,10 +89,11 @@ const UnsplashImagePicker = ({ onImageSelect, onCancel, searchQuery = '' }) => {
 
         try {
             // Trigger download tracking on Unsplash
-            await downloadPhoto(selectedPhoto.id);
+            const savedImage = await downloadPhoto(selectedPhoto.id);
 
             // Return the selected photo data to parent
             onImageSelect({
+                imageId: savedImage.imageId,
                 imageUrl: selectedPhoto.urls.regular,
                 altText: selectedPhoto.alt_description || selectedPhoto.description || 'Product image from Unsplash',
                 photographerName: selectedPhoto.user.name,

@@ -102,16 +102,7 @@ const GroupedProductImageManagement = () => {
     const handleUnsplashImageSelect = async (imageData) => {
         try {
             setLoading(true);
-
-            // Create image from Unsplash data
-            const imagePayload = {
-                imageUrl: imageData.imageUrl,
-                altText: `${imageData.altText} - Photo by ${imageData.photographerName} on Unsplash`
-            };
-
-            const newImage = await createImage(imagePayload);
-
-            setSelectedImage(newImage.imageId);
+            setSelectedImage(imageData.imageId);
             setShowUnsplashPicker(false);
             setSuccessMessage(`Image from Unsplash added successfully! Photo by ${imageData.photographerName}. Now associate it with the product.`);
             setTimeout(() => setSuccessMessage(null), 5000);
