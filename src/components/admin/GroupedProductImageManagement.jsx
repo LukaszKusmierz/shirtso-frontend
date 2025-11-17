@@ -377,7 +377,7 @@ const GroupedProductImageManagement = () => {
                             <UnsplashImagePicker
                                 onImageSelect={handleUnsplashImageSelect}
                                 onCancel={() => setShowUnsplashPicker(false)}
-                                searchQuery={groupedProduct.productName}
+                                searchQuery={groupedProduct.description}// for localsearch {groupedProduct.productName} much better
                             />
                         </div>
                     ) : (

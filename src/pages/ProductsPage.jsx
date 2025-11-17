@@ -5,12 +5,11 @@ import ProductFilters from '../components/products/ProductFilters';
 import {
     getAllGroupedProducts,
     getGroupedProductsBySubcategory,
-    getGroupedProductsInStock,
     getGroupedProductsByName,
     getGroupedProductsBySizeAndSubcategory,
     getGroupedProductsBySize,
     getGroupedProductsByCategory,
-    getGroupedProductsBySizeAndCategory
+    getGroupedProductsBySizeAndCategory,
 } from '../services/ProductService';
 
 const ProductsPage = () => {
@@ -25,7 +24,9 @@ const ProductsPage = () => {
         inStock: false,
         search: '',
     });
+
     const [filtersInitialized, setFiltersInitialized] = useState(false);
+
     const location = useLocation();
     const fetchingRef = useRef(false);
 
@@ -77,8 +78,6 @@ const ProductsPage = () => {
                 } else if (filters.size) {
                     productFunction = getGroupedProductsBySize;
                     args = [filters.size];
-                } else if (filters.inStock) {
-                    productFunction = getGroupedProductsInStock;
                 } else {
                     productFunction = getAllGroupedProducts;
                 }
@@ -95,7 +94,7 @@ const ProductsPage = () => {
         };
 
         fetchProducts();
-    }, [filtersInitialized, filters.subcategoryId, filters.size, filters.inStock, filters.search, filters.categoryId]);
+    }, [filtersInitialized, filters]);
 
     useEffect(() => {
         let result = [...products];
@@ -116,11 +115,11 @@ const ProductsPage = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        const search = e.target.search.value;
+        const search = e.target.search.value.trim();
 
         setFilters((prev) => ({
             ...prev,
-            search: search,
+            search,
         }));
     };
 
