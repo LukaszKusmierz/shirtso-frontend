@@ -22,6 +22,7 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductEditPage from './pages/admin/AdminProductEditPage';
 import AdminGroupedProductImagePage from './pages/admin/AdminGroupedProductImagePage';
 import NotFoundPage from './pages/NotFoundPage';
+import { Analytics } from "@vercel/analytics/react"
 
 const ProtectedRoute = ({ children }) => {
     const { currentUser, loading } = useAuth();
@@ -111,6 +112,7 @@ const App = () => {
                             <Route path="*" element={<NotFoundPage />} />
                         </Routes>
                     </MainLayout>
+                    <Analytics />
                 </CartProvider>
             </AuthProvider>
         </Router>

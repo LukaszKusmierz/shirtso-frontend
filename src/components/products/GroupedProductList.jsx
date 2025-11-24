@@ -84,3 +84,5 @@ const GroupedProductList = ({ products, loading, error }) => {
 };
 
 export default GroupedProductList;
+
+//TODO: update filtering by size(single size product card and product list)
