@@ -7,7 +7,7 @@ import {
     getGroupedProductsBySubcategory,
     getGroupedProductsByName,
     getGroupedProductsBySizeAndSubcategory,
-    getGroupedProductsBySize,
+    getProductsBySize,
     getGroupedProductsByCategory,
     getGroupedProductsBySizeAndCategory,
 } from '../services/ProductService';
@@ -76,7 +76,7 @@ const ProductsPage = () => {
                     productFunction = getGroupedProductsByCategory;
                     args = [filters.categoryId];
                 } else if (filters.size) {
-                    productFunction = getGroupedProductsBySize;
+                    productFunction = getProductsBySize;
                     args = [filters.size];
                 } else {
                     productFunction = getAllGroupedProducts;
