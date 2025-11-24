@@ -159,6 +159,7 @@ const CheckoutPage = () => {
                     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                         <ShippingMethodSelector
                             onShippingMethodSelected={handleShippingMethodSelected}
+                            currency={currency}
                         />
                     </div>
 

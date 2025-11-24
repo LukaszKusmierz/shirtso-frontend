@@ -20,6 +20,7 @@ const PaymentPage = () => {
     const [existingPayment, setExistingPayment] = useState(null);
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CREDIT_CARD');
+    const currency = order?.items?.[0]?.currency || '';
     const [cardDetails, setCardDetails] = useState({
         cardNumber: '',
         cardHolderName: '',
@@ -55,6 +56,8 @@ const PaymentPage = () => {
                 getOrderDetails(orderId),
                 getPaymentMethods()
             ]);
+            console.log('Order data:', orderData);
+            console.log('Items:', orderData.items);
 
             setOrder(orderData);
             setPaymentMethods(methods);
@@ -509,7 +512,7 @@ const PaymentPage = () => {
                                     loading={submitting}
                                     className="px-8"
                                 >
-                                    {submitting ? 'Processing...' : `Pay ${displayTotal} EUR`}
+                                    {submitting ? 'Processing...' : `Pay ${displayTotal} ${currency}`}
                                 </Button>
                             </div>
                         </form>
@@ -531,31 +534,31 @@ const PaymentPage = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Subtotal:</span>
-                                <span>{subtotal || order.subtotalAmount} EUR</span>
+                                <span>{subtotal || order.subtotalAmount} {currency}</span>
                             </div>
                             {(shippingCost || order.shippingAmount) > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Shipping:</span>
-                                    <span>{shippingCost || order.shippingAmount} EUR</span>
+                                    <span>{shippingCost || order.shippingAmount} {currency}</span>
                                 </div>
                             )}
                             {(discount || order.discountAmount) > 0 && (
                                 <div className="flex justify-between text-sm text-green-600">
                                     <span>Discount:</span>
-                                    <span>-{discount || order.discountAmount} EUR</span>
+                                    <span>-{discount || order.discountAmount} {currency}</span>
                                 </div>
                             )}
                             {order.taxAmount > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax:</span>
-                                    <span>{order.taxAmount} EUR</span>
+                                    <span>{order.taxAmount} {currency}</span>
                                 </div>
                             )}
                         </div>
 
                         <div className="flex justify-between text-lg font-bold">
                             <span>Total:</span>
-                            <span className="text-blue-600">{displayTotal} EUR</span>
+                            <span className="text-blue-600">{displayTotal} {currency}</span>
                         </div>
                     </div>
 

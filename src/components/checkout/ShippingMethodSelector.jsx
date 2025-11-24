@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getActiveShippingMethods } from '../../services/ShippingMethodService';
 import Spinner from '../common/Spinner';
 
-const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
+const ShippingMethodSelector = ({ onShippingMethodSelected, currency }) => {
     const [shippingMethods, setShippingMethods] = useState([]);
     const [selectedMethodId, setSelectedMethodId] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -78,7 +78,7 @@ const ShippingMethodSelector = ({ onShippingMethodSelected }) => {
                         <div className="ml-3">
                             <div className="flex justify-between w-full">
                                 <span className="font-medium">{method.name}</span>
-                                <span className="font-medium">{method.price} EUR</span>
+                                <span className="font-medium">{method.price} {currency}</span>
                             </div>
                             <p className="text-sm text-gray-600">{method.description}</p>
                             <p className="text-sm text-gray-600">

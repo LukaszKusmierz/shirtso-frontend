@@ -181,7 +181,7 @@ const GroupedProductDetails = ({ groupedProduct }) => {
                         </span>
                         {sizeVariants.length > 1 && (
                             <span className="ml-2 text-sm text-gray-500">
-                                ({sizeVariants.length} sizes available)
+                                ({sizeVariants.length} sizes available, {sizeVariants.filter(v => v.stock > 0).length} in stock)
                             </span>
                         )}
                     </div>
