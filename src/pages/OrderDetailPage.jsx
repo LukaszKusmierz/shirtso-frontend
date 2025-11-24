@@ -279,7 +279,7 @@ const OrderDetailPage = () => {
                                 </div>
                                 <div>
                                     <span className="block text-sm text-gray-600">Amount</span>
-                                    <span className="block font-medium">{payment.amount} EUR</span>
+                                    <span className="block font-medium">{payment.amount} {order.item.currency}</span>
                                 </div>
                                 {payment.transactionId && (
                                     <div className="col-span-2">
@@ -324,9 +324,9 @@ const OrderDetailPage = () => {
                                             {item.productName}
                                         </Link>
                                     </div>
-                                    <div className="w-1/5 text-center">{item.price} EUR</div>
+                                    <div className="w-1/5 text-center">{item.price} {item.currency}</div>
                                     <div className="w-1/5 text-center">{item.quantity}</div>
-                                    <div className="w-1/5 text-right">{item.total} EUR</div>
+                                    <div className="w-1/5 text-right">{item.total} {item.currency}</div>
                                 </div>
                             ))}
                         </div>
@@ -334,29 +334,29 @@ const OrderDetailPage = () => {
                         <div className="mt-4 space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Subtotal:</span>
-                                <span>{order.subtotalAmount} EUR</span>
+                                <span>{order.subtotalAmount} {order.currency}</span>
                             </div>
                             {order.shippingAmount > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Shipping:</span>
-                                    <span>{order.shippingAmount} EUR</span>
+                                    <span>{order.shippingAmount} {order.currency}</span>
                                 </div>
                             )}
                             {order.discountAmount > 0 && (
                                 <div className="flex justify-between text-sm text-green-600">
                                     <span>Discount:</span>
-                                    <span>-{order.discountAmount} EUR</span>
+                                    <span>-{order.discountAmount} {order.currency}</span>
                                 </div>
                             )}
                             {order.taxAmount > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax:</span>
-                                    <span>{order.taxAmount} EUR</span>
+                                    <span>{order.taxAmount} {order.currency}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-lg font-semibold pt-2 border-t">
                                 <span>Total:</span>
-                                <span>{order.totalAmount} EUR</span>
+                                <span>{order.totalAmount} {order.currency}</span>
                             </div>
                         </div>
                     </div>

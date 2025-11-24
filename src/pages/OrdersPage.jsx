@@ -155,7 +155,7 @@ const OrdersPage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {order.total} EUR
+                                                    {order.total} {order.currency}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
