@@ -1,8 +1,9 @@
 import api from './Api.jsx';
 import {formatMethodName} from "../utils/Helpers";
 
-export const processPayment = (paymentData) => {
-    return api.post('/payments/process', paymentData);
+export const processPayment = async (paymentData) => {
+    const response = await api.post('/payments/process', paymentData);
+    return response;
 };
 
 // Example payment data structure:
@@ -77,8 +78,12 @@ export const retryPayment = async (paymentId) => {
 
 export const formatPaymentStatus = (status) => {
     const statusText = {
+        'NEW': 'New',
         'PENDING': 'Pending',
+        'WAITING_FOR_CONFIRMATION': 'Awaiting Confirmation',
         'COMPLETED': 'Completed',
+        'CANCELLED': 'Cancelled',
+        'REJECTED': 'Rejected',
         'FAILED': 'Failed',
         'REFUNDED': 'Refunded'
     };
@@ -87,12 +92,17 @@ export const formatPaymentStatus = (status) => {
 
 export const getPaymentStatusClass = (status) => {
     switch (status) {
+        case 'NEW':
         case 'PENDING':
+        case 'WAITING_FOR_CONFIRMATION':
             return 'bg-yellow-100 text-yellow-800';
         case 'COMPLETED':
             return 'bg-green-100 text-green-800';
         case 'FAILED':
+        case 'REJECTED':
             return 'bg-red-100 text-red-800';
+        case 'CANCELLED':
+            return 'bg-gray-100 text-gray-800';
         case 'REFUNDED':
             return 'bg-blue-100 text-blue-800';
         default:
@@ -100,5 +110,49 @@ export const getPaymentStatusClass = (status) => {
     }
 };
 
+export const requiresRedirect = (paymentResponse) => {
+    return paymentResponse?.redirectUrl != null && paymentResponse.redirectUrl !== '';
+};
 
+export const isRedirectPaymentMethod = (methodId) => {
+    const redirectMethods = [
+        'BANK_TRANSFER',
+        'NET_BANKING',
+        'UPI',
+        'WALLET',
+        'PAYPAL'
+    ];
+    return redirectMethods.includes(methodId);
+};
+
+export const requiresCardDetails = (methodId) => {
+    return methodId === 'CREDIT_CARD' || methodId === 'DEBIT_CARD';
+};
+
+export const getPaymentMethodIcon = (methodId) => {
+    const icons = {
+        'CREDIT_CARD': '💳',
+        'DEBIT_CARD': '💳',
+        'BANK_TRANSFER': '🏦',
+        'PAYPAL': '🅿️',
+        'APPLE_PAY': '🍎',
+        'GOOGLE_PAY': '🔵',
+        'PAY_ON_COLLECTION': '🏪',
+        'UPI': '📱',
+        'WALLET': '👛',
+        'EMI': '📅',
+        'NET_BANKING': '🌐'
+    };
+    return icons[methodId] || '💰';
+};
+
+export const redirectToPaymentGateway = (redirectUrl, delay = 0) => {
+    if (delay > 0) {
+        setTimeout(() => {
+            window.location.href = redirectUrl;
+        }, delay);
+    } else {
+        window.location.href = redirectUrl;
+    }
+};
 
