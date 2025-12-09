@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/UseAuth';
 import { getOrderDetails } from '../services/OrderService';
@@ -6,7 +6,12 @@ import {
     getPaymentMethods,
     processPayment,
     checkPaymentStatus,
-    getPaymentByOrderId
+    getPaymentByOrderId,
+    requiresRedirect,
+    isRedirectPaymentMethod,
+    requiresCardDetails as checkRequiresCardDetails,
+    getPaymentMethodIcon,
+    redirectToPaymentGateway
 } from '../services/PaymentService';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
@@ -35,6 +40,7 @@ const PaymentPage = () => {
     });
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [redirecting, setRedirecting] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const { currentUser } = useAuth();
@@ -48,6 +54,12 @@ const PaymentPage = () => {
         total,
         address
     } = checkoutDetails;
+
+    // Check if selected method requires card details
+    const showCardForm = checkRequiresCardDetails(selectedPaymentMethod);
+
+    // Check if selected method uses redirect flow (PayU)
+    const usesRedirectFlow = isRedirectPaymentMethod(selectedPaymentMethod);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -64,12 +76,13 @@ const PaymentPage = () => {
 
             if (orderData.orderStatus !== 'NEW') {
                 try {
-                    const [paymentData, statusData] = await Promise.all([
+                    const [paymentData, isPaid] = await Promise.all([
                         getPaymentByOrderId(orderId),
                         checkPaymentStatus(orderId)
                     ]);
 
-                    if ((statusData?.isPaid || paymentData?.status === 'COMPLETED')) {
+                    // checkPaymentStatus returns boolean directly
+                    if (isPaid === true || paymentData?.status === 'COMPLETED') {
                         navigate(`/orders/${orderId}`, {
                             state: { message: 'This order has already been paid.' }
                         });
@@ -78,12 +91,13 @@ const PaymentPage = () => {
 
                     if (paymentData) {
                         setExistingPayment({
-                            ...paymentData,
-                            status: statusData?.status || paymentData.status
+                            ...paymentData
                         });
 
                         if (paymentData.status === 'FAILED') {
                             setError('Previous payment attempt failed. Please try again with valid payment details.');
+                        } else if (paymentData.status === 'PENDING') {
+                            setError('A payment is currently pending. Please wait for it to complete or try again.');
                         }
                     }
                 } catch {
@@ -182,7 +196,7 @@ const PaymentPage = () => {
     };
 
     const validateCardDetails = () => {
-        if (selectedPaymentMethod !== 'CREDIT_CARD') return true;
+        if (!showCardForm) return true;
 
         const { cardNumber, cardHolderName, expiryDate, cvv } = cardDetails;
         let isValid = true;
@@ -221,7 +235,7 @@ const PaymentPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateCardDetails()) {
+        if (showCardForm && !validateCardDetails()) {
             setError('Please correct the errors in the form');
             return;
         }
@@ -233,7 +247,7 @@ const PaymentPage = () => {
             const paymentData = {
                 orderId: parseInt(orderId),
                 paymentMethod: selectedPaymentMethod,
-                ...(selectedPaymentMethod === 'CREDIT_CARD' && {
+                ...(showCardForm && {
                     cardNumber: cardDetails.cardNumber.replace(/\s/g, ''),
                     cardHolderName: cardDetails.cardHolderName,
                     expiryDate: cardDetails.expiryDate,
@@ -243,7 +257,20 @@ const PaymentPage = () => {
 
             const paymentResponse = await processPayment(paymentData);
 
-            // Clear cart
+            // Check if PayU returned a redirect URL
+            if (requiresRedirect(paymentResponse)) {
+                setRedirecting(true);
+                setSuccessMessage('Redirecting to payment gateway...');
+
+                // Clear cart
+                await CartEventService.emitCartChange();
+
+                // Redirect to PayU payment page
+                redirectToPaymentGateway(paymentResponse.redirectUrl, 1000);
+                return;
+            }
+
+            // Direct payment completed (mock gateway)
             await CartEventService.emitCartChange();
 
             // Clear form
@@ -272,7 +299,6 @@ const PaymentPage = () => {
             let errorMessage = 'Payment processing failed. Please try again.';
 
             if (err.response) {
-                // Server responded with error
                 if (err.response.status === 400) {
                     const serverMessage = err.response.data?.message;
                     if (serverMessage?.includes('already exists')) {
@@ -294,7 +320,9 @@ const PaymentPage = () => {
 
             setError(errorMessage);
         } finally {
-            setSubmitting(false);
+            if (!redirecting) {
+                setSubmitting(false);
+            }
         }
     };
 
@@ -364,6 +392,16 @@ const PaymentPage = () => {
                 />
             )}
 
+            {redirecting && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-8 text-center max-w-sm mx-4">
+                        <Spinner size="lg" />
+                        <p className="mt-4 text-lg font-medium">Redirecting to payment gateway...</p>
+                        <p className="text-sm text-gray-500 mt-2">Please do not close this window.</p>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                     <div className="bg-white rounded-lg shadow-md p-6">
@@ -374,10 +412,17 @@ const PaymentPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Select Payment Method
                                 </label>
-                                <div className="space-y-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {paymentMethods.length > 0 ? (
                                         paymentMethods.map(method => (
-                                            <div key={method.id} className="flex items-center p-3 border rounded hover:bg-gray-50">
+                                            <div
+                                                key={method.id}
+                                                className={`flex items-center p-3 border rounded cursor-pointer transition
+                                                    ${selectedPaymentMethod === method.id
+                                                    ? 'border-blue-500 bg-blue-50'
+                                                    : 'hover:bg-gray-50'}`}
+                                                onClick={() => setSelectedPaymentMethod(method.id)}
+                                            >
                                                 <input
                                                     type="radio"
                                                     id={method.id}
@@ -387,8 +432,17 @@ const PaymentPage = () => {
                                                     onChange={handlePaymentMethodChange}
                                                     className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                                                 />
-                                                <label htmlFor={method.id} className="ml-3 block text-sm text-gray-700 cursor-pointer flex-1">
+                                                <label
+                                                    htmlFor={method.id}
+                                                    className="ml-3 flex items-center text-sm text-gray-700 cursor-pointer flex-1"
+                                                >
+                                                    <span className="mr-2">{getPaymentMethodIcon(method.id)}</span>
                                                     {method.name}
+                                                    {isRedirectPaymentMethod(method.id) && (
+                                                        <span className="ml-2 text-xs bg-gray-200 px-2 py-0.5 rounded">
+                                                            Redirect
+                                                        </span>
+                                                    )}
                                                 </label>
                                             </div>
                                         ))
@@ -398,9 +452,10 @@ const PaymentPage = () => {
                                 </div>
                             </div>
 
-                            {selectedPaymentMethod === 'CREDIT_CARD' && (
+                            {/* Card details form - only show for card payments */}
+                            {showCardForm && (
                                 <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium mb-4">Credit Card Details</h3>
+                                    <h3 className="text-lg font-medium mb-4">Card Details</h3>
 
                                     <div className="space-y-4">
                                         <div>
@@ -414,7 +469,7 @@ const PaymentPage = () => {
                                                 onChange={handleCardInputChange}
                                                 placeholder="1234 5678 9012 3456"
                                                 className={`w-full p-3 border ${validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'} rounded focus:ring-2 focus:ring-blue-500`}
-                                                required={selectedPaymentMethod === 'CREDIT_CARD'}
+                                                required={showCardForm}
                                                 maxLength={19}
                                             />
                                             {validationErrors.cardNumber && (
@@ -436,7 +491,7 @@ const PaymentPage = () => {
                                                 onChange={handleCardInputChange}
                                                 placeholder="John Doe"
                                                 className={`w-full p-3 border ${validationErrors.cardHolderName ? 'border-red-500' : 'border-gray-300'} rounded focus:ring-2 focus:ring-blue-500`}
-                                                required={selectedPaymentMethod === 'CREDIT_CARD'}
+                                                required={showCardForm}
                                             />
                                             {validationErrors.cardHolderName && (
                                                 <p className="mt-1 text-xs text-red-500">{validationErrors.cardHolderName}</p>
@@ -455,7 +510,7 @@ const PaymentPage = () => {
                                                     onChange={handleCardInputChange}
                                                     placeholder="MM/YY"
                                                     className={`w-full p-3 border ${validationErrors.expiryDate ? 'border-red-500' : 'border-gray-300'} rounded focus:ring-2 focus:ring-blue-500`}
-                                                    required={selectedPaymentMethod === 'CREDIT_CARD'}
+                                                    required={showCardForm}
                                                     maxLength={5}
                                                 />
                                                 {validationErrors.expiryDate && (
@@ -474,7 +529,7 @@ const PaymentPage = () => {
                                                     onChange={handleCardInputChange}
                                                     placeholder="123"
                                                     className={`w-full p-3 border ${validationErrors.cvv ? 'border-red-500' : 'border-gray-300'} rounded focus:ring-2 focus:ring-blue-500`}
-                                                    required={selectedPaymentMethod === 'CREDIT_CARD'}
+                                                    required={showCardForm}
                                                     maxLength={4}
                                                 />
                                                 {validationErrors.cvv && (
@@ -486,12 +541,54 @@ const PaymentPage = () => {
 
                                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
                                         <div className="flex">
-                                            <svg className="h-5 w-5 text-blue-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                             </svg>
                                             <p className="text-sm text-blue-800">
                                                 Your payment information is secure and encrypted. We never store your full card details.
                                             </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Info for redirect-based payments */}
+                            {usesRedirectFlow && (
+                                <div className="border-t pt-6">
+                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                                        <div className="flex">
+                                            <svg className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                            <div>
+                                                <p className="text-sm text-yellow-800 font-medium">
+                                                    You will be redirected to complete payment
+                                                </p>
+                                                <p className="text-sm text-yellow-700 mt-1">
+                                                    After clicking "Pay", you'll be redirected to a secure payment page to complete your transaction.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Pay on collection info */}
+                            {selectedPaymentMethod === 'PAY_ON_COLLECTION' && (
+                                <div className="border-t pt-6">
+                                    <div className="p-4 bg-green-50 border border-green-200 rounded">
+                                        <div className="flex">
+                                            <svg className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            <div>
+                                                <p className="text-sm text-green-800 font-medium">
+                                                    Pay when you collect your order
+                                                </p>
+                                                <p className="text-sm text-green-700 mt-1">
+                                                    No payment required now. You can pay in cash or card when collecting your order.
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -508,11 +605,16 @@ const PaymentPage = () => {
                                 <Button
                                     type="submit"
                                     variant="primary"
-                                    disabled={submitting}
+                                    disabled={submitting || redirecting}
                                     loading={submitting}
                                     className="px-8"
                                 >
-                                    {submitting ? 'Processing...' : `Pay ${displayTotal} ${currency}`}
+                                    {submitting
+                                        ? (usesRedirectFlow ? 'Redirecting...' : 'Processing...')
+                                        : selectedPaymentMethod === 'PAY_ON_COLLECTION'
+                                            ? 'Confirm Order'
+                                            : `Pay ${displayTotal} ${currency}`
+                                    }
                                 </Button>
                             </div>
                         </form>

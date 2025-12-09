@@ -15,6 +15,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentPage from './pages/PaymentPage';
+import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
@@ -82,6 +83,11 @@ const App = () => {
                             <Route path="/checkout/payment/:orderId" element={
                                 <ProtectedRoute>
                                     <PaymentPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/checkout/payment/callback" element={
+                                <ProtectedRoute>
+                                    <PaymentCallbackPage />
                                 </ProtectedRoute>
                             } />
                             <Route path="/orders" element={
