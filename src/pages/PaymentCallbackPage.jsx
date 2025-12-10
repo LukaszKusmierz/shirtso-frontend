@@ -12,7 +12,7 @@ const PaymentCallbackPage = () => {
     const [pollCount, setPollCount] = useState(0);
     const MAX_POLLS = 10;
     const POLL_INTERVAL = 3000; // 3 seconds
-    const dbOrderId = searchParams.get('dbOrderId');
+    const dbOrderId = searchParams.get('orderId');
     const error = searchParams.get('error');
 
     const checkPayment = useCallback(async (orderIdToCheck) => {
