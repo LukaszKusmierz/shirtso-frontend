@@ -12,9 +12,7 @@ const PaymentCallbackPage = () => {
     const [pollCount, setPollCount] = useState(0);
     const MAX_POLLS = 10;
     const POLL_INTERVAL = 3000; // 3 seconds
-
-    // Extract order ID from URL params (PayU returns extOrderId)
-    const extOrderId = searchParams.get('orderId') || searchParams.get('extOrderId');
+    const dbOrderId = searchParams.get('dbOrderId');
     const error = searchParams.get('error');
 
     const checkPayment = useCallback(async (orderIdToCheck) => {
@@ -63,7 +61,7 @@ const PaymentCallbackPage = () => {
         // Extract order ID from extOrderId (format: SHIRTSO-XXXXXXXX)
         // We need to find the actual order ID from the payment record
         const initializeCheck = async () => {
-            if (!extOrderId) {
+            if (!dbOrderId) {
                 setStatus('error');
                 setMessage('Invalid callback: missing order information');
                 return;
@@ -71,10 +69,10 @@ const PaymentCallbackPage = () => {
 
             // Try to parse order ID if it's in a recognizable format
             // For now, we'll need to look it up via the transaction
-            setOrderId(extOrderId);
+            setOrderId(dbOrderId);
 
             // Start polling for payment status
-            const isComplete = await checkPayment(extOrderId);
+            const isComplete = await checkPayment(dbOrderId);
             if (!isComplete) {
                 setStatus('pending');
                 setMessage('Payment is being processed. Please wait...');
@@ -82,7 +80,7 @@ const PaymentCallbackPage = () => {
         };
 
         initializeCheck();
-    }, [extOrderId, error, checkPayment]);
+    }, [dbOrderId, error, checkPayment]);
 
     // Poll for payment status if pending
     useEffect(() => {
