@@ -22,7 +22,7 @@ const OrderDetailPage = () => {
     const [retrying, setRetrying] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
-    const { currentUser } = useAuth();
+    const { currentUser, loading: authLoading } = useAuth();
     const navigate = useNavigate();
 
     const fetchOrderAndPaymentDetails = useCallback(async () => {
@@ -51,12 +51,14 @@ const OrderDetailPage = () => {
     }, [orderId]);
 
     useEffect(() => {
+        if (authLoading) return;
+
         if (!currentUser) {
             navigate('/login', { state: { from: `/orders/${orderId}` } });
             return;
         }
         fetchOrderAndPaymentDetails();
-    }, [currentUser, orderId, navigate, fetchOrderAndPaymentDetails]);
+    }, [currentUser, authLoading, orderId, navigate, fetchOrderAndPaymentDetails]);
 
     const handleCancelOrder = async () => {
         if (!window.confirm('Are you sure you want to cancel this order?')) {
@@ -129,7 +131,7 @@ const OrderDetailPage = () => {
         }
     };
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="container mx-auto p-4">
                 <div className="flex justify-center items-center h-64">
